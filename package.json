@@ -1,0 +1,19 @@
+{
+  "name": "spidercam",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "dev": "npm run dev -w @spidercam/server",
+    "start": "npm run start -w @spidercam/server",
+    "check": "npm run build && npm run typecheck --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
