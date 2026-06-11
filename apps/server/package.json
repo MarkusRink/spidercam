@@ -7,7 +7,10 @@
     "build": "tsc && npm run build -w @spidercam/web",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "npm run test:unit && npm run test:integration",
+    "test:unit": "node --import tsx --test test/room.test.ts",
+    "test:integration": "node --import tsx --test --test-concurrency=1 --test-force-exit test/*.integration.test.ts"
   },
   "dependencies": {
     "@spidercam/shared": "*",

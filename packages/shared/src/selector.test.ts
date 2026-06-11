@@ -1,6 +1,6 @@
 import { describe, it, beforeEach } from "node:test";
 import assert from "node:assert/strict";
-import { selectSources, resetSelectorState } from "./selector.js";
+import { selectSources, resetSelectorState, seatDistance } from "./selector.js";
 import { DEFAULT_HOST_CONFIG, type StreamMetrics } from "./types.js";
 
 function metric(id: string, seat: number, level: number): StreamMetrics {
@@ -18,6 +18,14 @@ function metric(id: string, seat: number, level: number): StreamMetrics {
     lastUpdated: Date.now(),
   };
 }
+
+describe("seatDistance", () => {
+  it("measures circular distance around table", () => {
+    assert.equal(seatDistance(8, 0, 4), 4);
+    assert.equal(seatDistance(8, 0, 7), 1);
+    assert.equal(seatDistance(8, 3, 4), 1);
+  });
+});
 
 describe("selectSources", () => {
   beforeEach(() => resetSelectorState());
