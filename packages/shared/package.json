@@ -14,7 +14,7 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test src/selector.test.ts"
+    "test": "node --import tsx --test src/*.test.ts"
   },
   "devDependencies": {
     "tsx": "^4.19.4"

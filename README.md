@@ -81,6 +81,25 @@ npm install
 npm run dev        # server with hot reload (port 9847)
 ```
 
+## Testing
+
+```bash
+npm run build
+npm run test           # unit + integration
+npm run test:unit      # selector, messages, room
+npm run test:integration  # signaling, bridge, HTTP (in-process server)
+npm run test:e2e       # Playwright browser tests (fake cam/mic)
+npm run test:all       # everything
+```
+
+CI runs all three layers on every push via GitHub Actions (`.github/workflows/ci.yml`):
+
+| Job | What it covers |
+|-----|----------------|
+| **unit** | Source selector, message validation, room state |
+| **integration** | WebSocket signaling relay, bridge pipe, static HTTP |
+| **e2e** | Participant connect, host mixer start, multi-client room flow |
+
 In another terminal, for frontend hot reload during development:
 
 ```bash

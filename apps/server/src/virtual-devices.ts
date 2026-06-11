@@ -11,6 +11,13 @@ export interface VirtualDeviceConfig {
   channels: number;
 }
 
+export interface VirtualDeviceBridgeLike {
+  start(): { video: boolean; audio: boolean; warnings: string[] };
+  writeVideoFrame(rgba: Buffer): void;
+  writeAudioChunk(pcm: Buffer): void;
+  stop(): void;
+}
+
 const DEFAULT_CONFIG: VirtualDeviceConfig = {
   videoDevice: "/dev/video2",
   width: 1280,
@@ -21,7 +28,7 @@ const DEFAULT_CONFIG: VirtualDeviceConfig = {
   channels: 1,
 };
 
-export class VirtualDeviceBridge {
+export class VirtualDeviceBridge implements VirtualDeviceBridgeLike {
   private videoProc: ChildProcess | null = null;
   private audioProc: ChildProcess | null = null;
   private config: VirtualDeviceConfig;
