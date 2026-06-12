@@ -92,6 +92,16 @@ npm run test:e2e       # Playwright browser tests (fake cam/mic)
 npm run test:all       # everything
 ```
 
+## Agent quality workflow
+
+For Cursor work, the recommended loop is:
+
+1. Implement the change.
+2. Run `npm run lint` and `npm run format`.
+3. Run `npm run check` before handing the change off.
+4. Use Fallow through Cursor MCP for deeper dead-code, duplication, and complexity analysis on risky or structural changes.
+5. For bugs, reproduce the failure first, then add temporary logging to confirm the hypothesis before fixing it.
+
 CI runs all three layers on every push via GitHub Actions (`.github/workflows/ci.yml`):
 
 | Job | What it covers |
