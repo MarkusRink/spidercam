@@ -33,9 +33,10 @@ type ParticipantViewMsg struct {
 
 type JoinMsg struct {
 	Type     string `json:"type"` // "join"
-	Name     string `json:"name"`
+	Name     string `json:"name"` // display name (cosmetic)
 	HasVideo bool   `json:"hasVideo"`
 	HasAudio bool   `json:"hasAudio"`
+	ClientID string `json:"clientId,omitempty"` // optional reconnect hint; WS session id wins
 }
 ```
 

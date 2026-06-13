@@ -84,13 +84,46 @@ Stream grid:
 </div>
 ```
 
-Participant shell:
+Participant shell — single card, centered:
 
-```html
+```tsx
+// web/participant/src/components/ParticipantShell.tsx
 <div class="flex min-h-screen items-center justify-center p-4">
-  <div class="w-full max-w-[420px] space-y-3">…</div>
+  <div class="w-full max-w-[420px] space-y-3">
+    <ParticipantHeader />   {/* display name + routed dot + clientId */}
+    <LocalPreview />        {/* video + local VuMeter — always */}
+    <DeviceRows />          {/* mic/cam select + toggles — always */}
+    <ConnectionToggle />
+    <Show when={phase === "connected"}><RoomStatus /></Show>
+    <Show when={phase === "reconnecting" || phase === "lost"}><LostHostBanner /></Show>
+  </div>
 </div>
 ```
+
+### On-air dot (host vs participant)
+
+**Host stream cards** — red dot in card header when `activeAudioId === streamId`:
+
+```tsx
+<span
+  class="h-2 w-2 shrink-0 rounded-full bg-(--color-spider-error)"
+  classList={{ invisible: !props.onAir }}
+  title="On air"
+/>
+```
+
+**Participant monitor** — red dot in **page header** beside display name when `activeAudioId === clientId` (routed to Teams). The **On air:** status row is text only (`you` / `host` / display name from `mainTalkerId`).
+
+```tsx
+// web/participant/src/components/ParticipantHeader.tsx
+<div class="flex items-center gap-2">
+  <input class="flex-1 …" value={displayName()} onInput={…} />
+  <OnAirDot onAir={isRouted(view(), clientId())} title="Routed to Teams" />
+</div>
+<p class="font-mono text-[10px] text-(--color-spider-muted) truncate">{clientId()}</p>
+```
+
+Independent of on-air dot on host cards: a challenger can have a bright score border during HOLD without being routed.
 
 ## Widget components
 
@@ -170,7 +203,7 @@ export function StateTimeline(props: { samples: MixerState[] }) {
 />
 ```
 
-Shown when `activeAudioId === streamId`. Red — routed to Teams, not top rank.
+Shown when `activeAudioId === streamId` on **host stream cards**. Red — routed to Teams, not top rank.
 
 ### Score border (activity)
 

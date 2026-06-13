@@ -20,6 +20,7 @@
 | D17 | Dual-branch audio pipeline | Raw analysis tap (scores, echoPenalty, loop delay) + enhancement branch (AEC, RNNoise) for mixer output. | 2026-06-11 |
 | D18 | Per-stream AEC | WebRTC APM AEC3; one instance per mic; `playback-ref` far-end; host toggle per card; default off. | 2026-06-11 |
 | D19 | Per-stream denoise | RNNoise via cgo; host toggle per card; `aecUs`/`denoiseUs` + `enhancementBudgetPct`; default off. | 2026-06-11 |
+| D20 | Participant single screen | One viewport; clientId UUID + cosmetic name; header routed dot; lost-host auto-reconnect. | 2026-06-13 |
 
 ## D1 — Host vs participant state channel
 
@@ -163,6 +164,18 @@ No CPU metric in host header.
 - `aecUs` EMA on `StreamMetrics`.
 
 **Rejected:** SpeexDSP as primary; custom NLMS; correlation-only as sole echo fix.
+
+## D20 — Participant monitor (single screen + reconnect)
+
+**Chosen:** One viewport for all participant UX; connection is a toggle, not a route change.
+
+- **Layout:** display name (default `client-{random}`) + **clientId** UUID + local preview + device pickers always visible; Connect / Disconnect on same screen.
+- **Identity:** `welcome.clientId` = routing id; `join.name` = cosmetic display name only.
+- **On-air UX:** header **red dot** when `activeAudioId === clientId`; **On air:** text row from `mainTalkerId` (`you` / name / `host`) — no dot on that row.
+- **Lost host:** banner on same screen when WS/WebRTC drops while connected; exponential backoff **auto-reconnect** + auto-`join`; local preview stays up; user Disconnect cancels retry.
+- **Disconnect:** `leave` + close peer/WS; remain on same screen with local preview.
+
+**Rejected:** Separate connect vs session pages; red dot on “On air:” row; navigate away on leave; manual re-enter name after host restart.
 
 ## D19 — Per-stream denoise
 

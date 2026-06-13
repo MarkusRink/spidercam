@@ -199,7 +199,10 @@ type SelfMetric struct {
 | `outLevelDbfs` / `outPeakDbfs` | Master mix RMS / peak for preview OUT meter |
 | `capture` | Active mic, camera, playback sink labels (host settings) |
 | `playback-ref` | REF vertical meter in preview panel; excluded from selector and global latency |
-| `mainTalkerId` | On-air talker; red dot when `activeAudioId` matches |
+| `ParticipantInfo.id` | Stable UUID per WS session (`welcome.clientId`); routing key |
+| `ParticipantInfo.name` | Display name from `join.name`; cosmetic; default client-side `client-{random}` |
+| `mainTalkerId` | Selected talker; participant **On air:** label (`you` / name / `host`) |
+| `activeAudioId` | Stream routed to Teams; participant **header red dot** when equals self |
 | `rmsDbfs` / `peakDbfs` on metrics | Post-enhancement levels (what Teams hears) |
 | `aecEnabled` / `denoiseEnabled` | Per-stream processing toggles; default false |
 | `aecUs` / `denoiseUs` | EMA process time per frame; 0 when disabled |

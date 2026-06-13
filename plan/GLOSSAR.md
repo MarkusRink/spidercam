@@ -32,7 +32,7 @@ Kurze Erklärungen zu Begriffen in den Plan-Dokumenten.
 | **Stream grid** | Feste 168×240 Cards, `grid-cols-5`; host + Teilnehmer. |
 | **Score border** | Card-Rahmen-Opacity ∝ `scoreSmooth` — Aktivität/Energie. |
 | **TransportBlock** | 2×3 Mono-Grid auf Card: rtt, loss, jitter, buf, fps, A/V. |
-| **Main talker / On air** | Aktiver Sprecher Richtung Teams; **roter Punkt** auf Stream-Card. |
+| **Main talker / On air** | Gewählter Sprecher (`mainTalkerId`); Host: roter Punkt auf Stream-Card; Participant: Textzeile „On air: …“, roter Punkt im Header wenn geroutet. |
 | **REF meter** | Vertikaler Pegel in Preview-Panel (Playback-Reference, nicht „on air“). |
 
 ## Netzwerk & Architektur

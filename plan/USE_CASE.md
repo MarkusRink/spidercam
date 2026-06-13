@@ -33,10 +33,11 @@ The host operator is **in the Teams meeting** on the same machine as `spidercamd
 
 | ID | Goal | Success criteria | Detail |
 |----|------|------------------|--------|
-| UC-P1 | Join quickly | Name + device toggles; **no seat** | [ui/participant-monitor.md](./ui/participant-monitor.md) |
-| UC-P2 | Confirm mic works | Live meter, dBFS, SNR, **loop delay text** | [ui/participant-monitor.md](./ui/participant-monitor.md) |
-| UC-P3 | Know on-air status | “On air: Alice”; “You: routed” when `activeAudioId === self` | [domain/types.md](./domain/types.md) |
-| UC-P4 | Leave cleanly | Disconnect → tracks stopped → connect screen | [architecture/signaling.md](./architecture/signaling.md) |
+| UC-P1 | Join quickly | Single screen; default display name `client-{random}`; mic/camera pickers + toggles; Connect toggle; **no seat** | [ui/participant-monitor.md](./ui/participant-monitor.md) |
+| UC-P2 | Confirm mic works | Local preview + RMS always; when connected: SNR, **loop delay text** from server | [ui/participant-monitor.md](./ui/participant-monitor.md) |
+| UC-P3 | Know on-air status | Header red dot when routed (`activeAudioId === clientId`); text row **On air: you** / **On air: {name}** / **On air: host** — no dot on that row | [domain/types.md](./domain/types.md) |
+| UC-P4 | Leave cleanly | Disconnect → `leave` + stop WebRTC/WS → **same screen**, local preview continues | [ui/participant-monitor.md](./ui/participant-monitor.md) |
+| UC-P5 | Survive host outage | **Lost host connection** banner; auto-reconnect with backoff; auto-`join` when host returns; cancel via Disconnect | [ui/participant-monitor.md](./ui/participant-monitor.md) |
 
 ## User actions
 
@@ -64,10 +65,13 @@ The host operator is **in the Teams meeting** on the same machine as `spidercamd
 
 | Action | Effect |
 |--------|--------|
-| Enter name | Sent on `join` |
-| Toggle webcam/mic | Before `getUserMedia` |
-| Connect | WS + WebRTC to Go |
-| Disconnect | `leave`, cleanup |
+| Edit display name | Cosmetic label; sent on next `join` |
+| Pick mic / camera | `getUserMedia` constraints; works connected or not |
+| Toggle mic / camera | Enable/disable tracks; preview updates immediately |
+| Connect | WS + `join` + WebRTC; room metrics appear |
+| Disconnect | `leave`, close peer/WS; stay on same screen; local preview continues |
+| Host goes offline while connected | Lost-host banner; auto-reconnect + auto-`join` (UC-P5) |
+| Retry now / Disconnect (lost-host) | Force immediate reconnect attempt or abort retry loop |
 
 ## Non-goals
 

@@ -1,6 +1,6 @@
 # Spidercam — Planning index
 
-Target-state specification for the Go daemon iteration. **Do not treat the existing Node/Electron codebase as the spec** — these documents define what we build.
+Target-state specification for the Go daemon iteration.
 
 ## High level
 

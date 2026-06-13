@@ -238,6 +238,3 @@ Loop delay text updates on passive-loop publish cadence (~3 s), not with 50 Hz m
 
 Routing history: **45 s state timeline** only. Per-stream health: **cards** (meter, transport, loop text, score border). Deep logs: **daemon terminal** — no in-UI JSON drawer (D15).
 
-## No Electron
-
-No preload, no IPC, no `getUserMedia` on host UI. Browser is a thin dashboard only.

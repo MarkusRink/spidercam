@@ -26,12 +26,19 @@ sequenceDiagram
   loop
     S->>B: participant-view (on selection/join/leave, max 10 Hz)
   end
+  Note over B,S: WS drop / host offline
+  B->>B: Lost-host banner, backoff retry
+  B->>S: reconnect WS
+  S->>B: welcome { clientId, view }
+  B->>S: join { name, hasVideo, hasAudio } (auto)
+  B->>S: offer / answer / ice
 ```
 
 ### Handler sketch
 
 ```go
 func (s *ParticipantWS) HandleJoin(clientID string, msg protocol.Join) {
+	// msg.ClientID optional reconnect hint; clientID from WS session wins if mismatch
 	s.room.AddParticipant(clientID, msg)
 	s.sendTo(clientID, protocol.ParticipantViewMsg(s.room.ViewFor(clientID)))
 	s.broadcastParticipantViews() // slim payload only
@@ -127,10 +134,16 @@ Details: [architecture/preview.md](./preview.md).
 
 | Type | Direction | Rate |
 |------|-----------|------|
-| `welcome` | server → client | once |
-| `join` / `leave` | client → server | on action |
+| `welcome` | server → client | once per WS connect |
+| `join` / `leave` | client → server | on action / auto-reconnect |
 | `participant-view` | server → client | on change, max 10 Hz |
 | `offer` / `answer` / `ice-candidate` | both | on demand |
+
+### Reconnect (client behaviour)
+
+Participant UI treats WS close or WebRTC failure while connected as **lost host**. It retries WS with exponential backoff and, on success, automatically sends `join` with the last display name and AV flags, then renegotiates WebRTC. User **Disconnect** cancels the retry loop. See [ui/participant-monitor.md](../ui/participant-monitor.md).
+
+Server does not hold long-lived session state across daemon restarts: each new WS gets a fresh `clientId` in `welcome`. Display name is re-applied via `join`.
 
 ## TypeScript clients
 
@@ -138,7 +151,11 @@ Details: [architecture/preview.md](./preview.md).
 // web/participant/src/signaling.ts
 export class ParticipantSignaling {
   connect(url = `ws://${location.host}/api/v1/ws`): Promise<void>;
+  onWelcome(handler: (clientId: string, view: ParticipantRoomView) => void): void;
   onView(handler: (view: ParticipantRoomView) => void): void;
+  onClose(handler: (wasClean: boolean) => void): void;
+  sendJoin(name: string, hasVideo: boolean, hasAudio: boolean, clientId?: string): void;
+  sendLeave(): void;
 }
 
 // web/host/src/signaling.ts

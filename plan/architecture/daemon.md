@@ -2,7 +2,7 @@
 
 **Target:** `cmd/spidercamd/`, `internal/daemon/`
 
-`spidercamd` is a **foreground CLI program**: start from a terminal, logs to stdout/stderr, Ctrl+C for clean shutdown. The host opens a **normal browser tab** to the embedded UI — not an Electron shell.
+`spidercamd` is a **foreground CLI program**: start from a terminal, logs to stdout/stderr, Ctrl+C for clean shutdown. The host opens a **normal browser tab** to the embedded UI.
 
 ## Operator workflow
 

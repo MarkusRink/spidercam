@@ -93,7 +93,7 @@ Browser tests **mock `/api`** with [MSW](https://mswjs.io/) — static UI only, 
 | Spec | MSW mocks | Asserts |
 |------|-----------|---------|
 | `host.spec.ts` | WS canned `host-state`; REST capture devices; preview WS mocked or omitted | OUT/REF meters, state timeline, stream grid cards (transport cells, on-air dot, score border), settings → config — **no preview pixel assert** |
-| `participant.spec.ts` | WS `welcome` + `participant-view` | on-air label, loop delay text, connect form |
+| `participant.spec.ts` | WS `welcome` + `participant-view`; WS close → lost-host banner | single-screen layout, device pickers always visible, connect toggle, on-air label + header dot, loop delay, auto-reconnect flow |
 | `mixer-settings.spec.ts` | host-state + config capture | ducking slider, hold/crossfade, score weight sliders |
 
 Playwright `webServer`: `vite preview` (or static `dist/`) — **not** the Go binary.
@@ -132,9 +132,10 @@ Optional **Vitest** for pure functions (`StateTimeline` bucketing, `LoopDelayTex
 | UC-H7 | Go unit reference + Go E2E mock PCM bleed scenario |
 | UC-H8 | Go unit delay tracker + Go E2E state snapshot |
 | UC-H9 | Go E2E capture devices REST + reopen |
-| UC-P1 | Playwright MSW participant connect flow |
-| UC-P2 | Playwright MSW loop delay text |
-| UC-P3 | Playwright MSW on-air label |
+| UC-P1 | Playwright MSW participant connect toggle on single screen |
+| UC-P2 | Playwright MSW loop delay text when connected |
+| UC-P3 | Playwright MSW on-air label + header routed dot |
+| UC-P5 | Playwright MSW WS drop → lost-host banner → auto-rejoin |
 
 ---
 

@@ -54,11 +54,20 @@ Example: `[___LLLLHSSSSSLLLL__]`. Audio crossfade duration appears as a run of `
 | Loop delay text, global latency | `host-state` @ ~0.3 Hz | Daemon passive loop |
 | `enhancementBudgetPct`, `aecUs`/`denoiseUs` | `host-state` ~20 Hz | Daemon enhancement branch |
 
-SolidJS store subscribes to WS; no Electron IPC.
+SolidJS store subscribes to WS.
 
 ## Participant monitor (one viewport)
 
-Connect + session. WebRTC to Pion on `:1234`; WS for slim room view. Session card shows **loop delay text** (`~118 ms` or `—`) from `selfMetric.loopDelay`.
+Single screen — no connect vs session routes. **Connect / Disconnect** is one toggle; local video preview, device pickers, and RMS meter are always visible.
+
+| Zone | Always | When connected |
+|------|--------|----------------|
+| Header | Editable display name (default `client-{random}`), muted **clientId** (UUID) | Red dot beside name when `activeAudioId === clientId` |
+| Preview | Local camera + **AnalyserNode** meter | Same |
+| Devices | Mic / camera dropdown + on/off toggles | Same; track swap on change |
+| Room | — | On air: `you` / `host` / name (text only); loop delay; SNR; transport grid |
+
+**Lost host connection:** banner on the same screen when WS/WebRTC drops; exponential backoff **auto-reconnect** with auto-`join`; local preview stays up. Detail: [ui/participant-monitor.md](./ui/participant-monitor.md).
 
 ## Widget catalog
 
@@ -68,7 +77,7 @@ See [ui/design-system.md](./ui/design-system.md):
 - **StateTimeline** — 45 s mixer-state history strip
 - **LoopDelayText** — approximate ms on stream cards and participant session card
 - **TransportBlock** — 2×3 mono grid: rtt, loss, jitter, buf, fps, A/V
-- **On-air dot** — red (`--color-spider-error`) when `activeAudioId === streamId`
+- **On-air dot** — red (`--color-spider-error`); **host stream cards** when `activeAudioId === streamId`; **participant header** when `activeAudioId === clientId` (not on the “On air:” text row)
 - **Score border** — card border opacity ∝ `scoreSmooth` (activity / energy)
 - **StreamProcessingRow** — per-card AEC / NS toggles + timing when enabled
 
