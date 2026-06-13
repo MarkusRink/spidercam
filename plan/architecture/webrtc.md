@@ -76,4 +76,4 @@ Poll Pion `GetStats` @ 1 Hz → merge into `StreamMetrics` for host-state (RTT, 
 
 ## ICE
 
-v1: STUN only (same LAN room). TURN deferred unless NAT traversal needed between VLANs.
+STUN only (same LAN room).
