@@ -84,6 +84,6 @@ D2, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13, D15, D16, D17, D18, D19 (Go arch
 
 ## How to close a decision
 
-1. Discuss referencing decision ID  
-2. Move to `DECISIONS.resolved.md`  
-3. Update affected sub-specs  
+1. Discuss referencing decision ID
+2. Move to `DECISIONS.resolved.md`
+3. Update affected sub-specs

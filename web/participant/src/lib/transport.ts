@@ -1,0 +1,52 @@
+import type { StreamMetrics } from "@spidercam/protocol";
+import type { SelfMetric } from "@spidercam/protocol";
+
+export function selfTransportMetric(
+  self: SelfMetric,
+  clientId: string,
+  hasAudio: boolean,
+  hasVideo: boolean,
+): StreamMetrics {
+  return {
+    participantId: clientId,
+    name: "",
+    role: "participant",
+    rmsDbfs: self.rmsDbfs,
+    peakDbfs: self.rmsDbfs,
+    speechLevelDbfs: self.rmsDbfs,
+    noiseFloorDbfs: -60,
+    snrDb: self.snrDb,
+    vad: self.vad,
+    vadHangoverMs: 0,
+    score: 0,
+    scoreSmooth: 0,
+    scoreComponents: {
+      level: 0,
+      snr: 0,
+      vad: 0,
+      priority: 0,
+      echoPenalty: 0,
+    },
+    rank: 0,
+    gateGainDb: 0,
+    duckingGainDb: 0,
+    calibrationGain: 1,
+    calibrationPhase: self.calibrationPhase,
+    jitterBufferFrames: 0,
+    delayOffsetMs: 0,
+    isMainTalker: false,
+    videoActive: hasVideo,
+    audioActive: hasAudio,
+    rttMs: null,
+    packetLoss: null,
+    jitterMs: null,
+    bitrateKbps: null,
+    framesPerSecond: null,
+    lastUpdated: Date.now(),
+    loopDelay: self.loopDelay,
+    aecEnabled: false,
+    denoiseEnabled: false,
+    aecUs: 0,
+    denoiseUs: 0,
+  };
+}

@@ -6,10 +6,10 @@ Both UIs are **SolidJS static SPAs** embedded in `spidercamd`. No media processi
 
 ## Screens
 
-| Screen | URL | WS | Media |
-|--------|-----|-----|-------|
+| Screen       | URL                      | WS                                                        | Media                                        |
+| ------------ | ------------------------ | --------------------------------------------------------- | -------------------------------------------- |
 | Host console | `http://127.0.0.1:1235/` | `/api/v1/ws` — `host-state`; `/api/v1/ws/preview` — H.264 | Preview via WebCodecs (daemon pushes stream) |
-| Participant | `http://<lan>:1234/` | `/api/v1/ws` — `participant-view` | `getUserMedia` + WebRTC → Pion |
+| Participant  | `http://<lan>:1234/`     | `/api/v1/ws` — `participant-view`                         | `getUserMedia` + WebRTC → Pion               |
 
 ## Host console (1080p, no page scroll)
 
@@ -33,26 +33,26 @@ No transport footer. No debug drawer. REF level only in preview panel (not on st
 
 Rolling strip driven by `selection.mixerState` (~20 Hz samples, bucketed for display). Each cell is one color:
 
-| Symbol | `mixerState` | Color |
-|--------|--------------|-------|
-| `_` | `SILENCE` | `--color-spider-meter-track` (background) |
-| `L` | `LOCKED` | `--color-spider-accent` (green) |
-| `H` | `HOLD` | `--color-spider-hold` (teal) |
-| `S` | `SWITCH` | `--color-spider-warn` (yellow) |
+| Symbol | `mixerState` | Color                                     |
+| ------ | ------------ | ----------------------------------------- |
+| `_`    | `SILENCE`    | `--color-spider-meter-track` (background) |
+| `L`    | `LOCKED`     | `--color-spider-accent` (green)           |
+| `H`    | `HOLD`       | `--color-spider-hold` (teal)              |
+| `S`    | `SWITCH`     | `--color-spider-warn` (yellow)            |
 
 Example: `[___LLLLHSSSSSLLLL__]`. Audio crossfade duration appears as a run of `S` cells.
 
 ### Host update loops
 
-| Data | Rate | Source |
-|------|------|--------|
-| Vertical meters (OUT, REF, stream cards) | WS `host-state` ~20 Hz + rAF interpolate | Daemon |
-| Card border opacity (`scoreSmooth`) | same `host-state` | Daemon |
-| State timeline | append `mixerState` on each `host-state` tick | UI buffer (45 s) |
-| Preview video | H.264 on `/api/v1/ws/preview` @ 15 fps | Daemon compositor + `internal/preview` |
-| Transport cells on cards | `host-state` @ 1 Hz (Pion stats) | Daemon |
-| Loop delay text, global latency | `host-state` @ ~0.3 Hz | Daemon passive loop |
-| `enhancementBudgetPct`, `aecUs`/`denoiseUs` | `host-state` ~20 Hz | Daemon enhancement branch |
+| Data                                        | Rate                                          | Source                                 |
+| ------------------------------------------- | --------------------------------------------- | -------------------------------------- |
+| Vertical meters (OUT, REF, stream cards)    | WS `host-state` ~20 Hz + rAF interpolate      | Daemon                                 |
+| Card border opacity (`scoreSmooth`)         | same `host-state`                             | Daemon                                 |
+| State timeline                              | append `mixerState` on each `host-state` tick | UI buffer (45 s)                       |
+| Preview video                               | H.264 on `/api/v1/ws/preview` @ 15 fps        | Daemon compositor + `internal/preview` |
+| Transport cells on cards                    | `host-state` @ 1 Hz (Pion stats)              | Daemon                                 |
+| Loop delay text, global latency             | `host-state` @ ~0.3 Hz                        | Daemon passive loop                    |
+| `enhancementBudgetPct`, `aecUs`/`denoiseUs` | `host-state` ~20 Hz                           | Daemon enhancement branch              |
 
 SolidJS store subscribes to WS.
 
@@ -60,12 +60,12 @@ SolidJS store subscribes to WS.
 
 Single screen — no connect vs session routes. **Connect / Disconnect** is one toggle; local video preview, device pickers, and RMS meter are always visible.
 
-| Zone | Always | When connected |
-|------|--------|----------------|
-| Header | Editable display name (default `client-{random}`), muted **clientId** (UUID) | Red dot beside name when `activeAudioId === clientId` |
-| Preview | Local camera + **AnalyserNode** meter | Same |
-| Devices | Mic / camera dropdown + on/off toggles | Same; track swap on change |
-| Room | — | On air: `you` / `host` / name (text only); loop delay; SNR; transport grid |
+| Zone    | Always                                                                       | When connected                                                             |
+| ------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Header  | Editable display name (default `client-{random}`), muted **clientId** (UUID) | Red dot beside name when `activeAudioId === clientId`                      |
+| Preview | Local camera + **AnalyserNode** meter                                        | Same                                                                       |
+| Devices | Mic / camera dropdown + on/off toggles                                       | Same; track swap on change                                                 |
+| Room    | —                                                                            | On air: `you` / `host` / name (text only); loop delay; SNR; transport grid |
 
 **Lost host connection:** banner on the same screen when WS/WebRTC drops; exponential backoff **auto-reconnect** with auto-`join`; local preview stays up. Detail: [ui/participant-monitor.md](./ui/participant-monitor.md).
 

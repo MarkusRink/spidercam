@@ -8,22 +8,22 @@ Noise suppression and speech cleanup for **in-room talkers** — HVAC, keyboard,
 
 ## RNNoise
 
-| Property | Value |
-|----------|-------|
-| Library | [RNNoise](https://github.com/xiph/rnnoise) (BSD-3-Clause) |
-| Rate / frame | 48 kHz, 480 samples (10 ms) |
-| Reference input | **None** |
-| State | One `DenoiseState` per enabled stream |
-| Default | **Off** |
-| Control | Host toggle per stream on stream card |
+| Property        | Value                                                     |
+| --------------- | --------------------------------------------------------- |
+| Library         | [RNNoise](https://github.com/xiph/rnnoise) (BSD-3-Clause) |
+| Rate / frame    | 48 kHz, 480 samples (10 ms)                               |
+| Reference input | **None**                                                  |
+| State           | One `DenoiseState` per enabled stream                     |
+| Default         | **Off**                                                   |
+| Control         | Host toggle per stream on stream card                     |
 
 ### Why RNNoise
 
-| vs | RNNoise | WebRTC NS (in APM) | DeepFilterNet |
-|----|---------|-------------------|---------------|
-| CPU | Moderate, desktop-friendly | Very low (bundled with AEC) | Higher |
-| Quality | Good general enhancement | Stationary noise mainly | Stronger; LGPL |
-| Coupling | Independent of AEC toggle | Tied to APM build | Separate stack |
+| vs       | RNNoise                    | WebRTC NS (in APM)          | DeepFilterNet  |
+| -------- | -------------------------- | --------------------------- | -------------- |
+| CPU      | Moderate, desktop-friendly | Very low (bundled with AEC) | Higher         |
+| Quality  | Good general enhancement   | Stationary noise mainly     | Stronger; LGPL |
+| Coupling | Independent of AEC toggle  | Tied to APM build           | Separate stack |
 
 DeepFilterNet / WPE dereverb out of scope — higher latency and build complexity.
 
@@ -38,11 +38,11 @@ raw ──► analysis tap
 raw ──► AEC? ──► RNNoise? ──► gate/duck ──► lastFrame ──► mixer
 ```
 
-| Metric | Source |
-|--------|--------|
-| VAD, SNR, score, echoPenalty, loop delay | **Raw** tap |
-| Card RMS / peak meters | **Post-enhancement** |
-| Mixer `lastFrame` | **Post-enhancement** |
+| Metric                                   | Source               |
+| ---------------------------------------- | -------------------- |
+| VAD, SNR, score, echoPenalty, loop delay | **Raw** tap          |
+| Card RMS / peak meters                   | **Post-enhancement** |
+| Mixer `lastFrame`                        | **Post-enhancement** |
 
 ---
 
@@ -74,12 +74,12 @@ Build with AVX2 RTCD when available (`--enable-x86-rtcd`).
 
 ### Lifecycle
 
-| Event | Action |
-|-------|--------|
-| Stream joins | `denoiseEnabled = false` |
-| Toggle on | `rnnoise_create()` |
-| Toggle off | passthrough; `rnnoise_destroy()` |
-| Stream leaves | destroy state |
+| Event         | Action                           |
+| ------------- | -------------------------------- |
+| Stream joins  | `denoiseEnabled = false`         |
+| Toggle on     | `rnnoise_create()`               |
+| Toggle off    | passthrough; `rnnoise_destroy()` |
+| Stream leaves | destroy state                    |
 
 Toggling mid-utterance causes timbre step — no NS crossfade.
 
@@ -116,11 +116,11 @@ NS  · 0.18ms
 
 ## CPU envelope (indicative, desktop x86)
 
-| Component | Per stream / 10 ms |
-|-----------|---------------------|
-| RNNoise (AVX2) | ~0.05–0.3 ms |
-| RNNoise (scalar) | ~0.3–1.0 ms |
-| APM AEC3 | ~0.1–1.0 ms |
+| Component        | Per stream / 10 ms |
+| ---------------- | ------------------ |
+| RNNoise (AVX2)   | ~0.05–0.3 ms       |
+| RNNoise (scalar) | ~0.3–1.0 ms        |
+| APM AEC3         | ~0.1–1.0 ms        |
 
 Four streams with both enabled ≈ 1–8 ms of 10 ms budget — profile on target host.
 
@@ -137,9 +137,9 @@ Four streams with both enabled ≈ 1–8 ms of 10 ms budget — profile on targe
 
 ## Tests
 
-| Layer | Cases |
-|-------|-------|
-| Unit | float↔int16 clip; passthrough when disabled |
-| Unit | EMA `denoiseUs`, `aecUs`, `enhancementBudgetPct` |
-| E2E | `set-stream-processing` → `host-state` flags |
-| Mock | `--mock` synthetic timing without native libs |
+| Layer | Cases                                            |
+| ----- | ------------------------------------------------ |
+| Unit  | float↔int16 clip; passthrough when disabled      |
+| Unit  | EMA `denoiseUs`, `aecUs`, `enhancementBudgetPct` |
+| E2E   | `set-stream-processing` → `host-state` flags     |
+| Mock  | `--mock` synthetic timing without native libs    |

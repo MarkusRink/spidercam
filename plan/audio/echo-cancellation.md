@@ -10,12 +10,12 @@ Teams AEC on the virtual mic **cannot** cancel bleed that enters **before** the 
 
 ## Layered mitigation
 
-| Layer | Mechanism | Removes echo? | Routing | Mix output |
-|-------|-----------|---------------|---------|------------|
-| Analysis | `echoPenalty` (corr @ lag 0 on **raw** mic) | No | Lowers score | No |
-| Mix gain | Reference ducking (`referenceDuckDb`) | Attenuates | No | Yes |
-| Enhancement | **WebRTC APM AEC3** per stream | Yes (adaptive) | No | Yes |
-| Diagnostic | Passive loop delay (GCC-PHAT on **raw**) | No | UI only | No |
+| Layer       | Mechanism                                   | Removes echo?  | Routing      | Mix output |
+| ----------- | ------------------------------------------- | -------------- | ------------ | ---------- |
+| Analysis    | `echoPenalty` (corr @ lag 0 on **raw** mic) | No             | Lowers score | No         |
+| Mix gain    | Reference ducking (`referenceDuckDb`)       | Attenuates     | No           | Yes        |
+| Enhancement | **WebRTC APM AEC3** per stream              | Yes (adaptive) | No           | Yes        |
+| Diagnostic  | Passive loop delay (GCC-PHAT on **raw**)    | No             | UI only      | No         |
 
 Correlation + ducking prevent **false talkers**. AEC cleans the **active** mic path when enabled.
 
@@ -23,25 +23,25 @@ Correlation + ducking prevent **false talkers**. AEC cleans the **active** mic p
 
 ## WebRTC APM AEC3 (chosen)
 
-| Property | Value |
-|----------|-------|
-| Type | Frequency-domain adaptive filter + delay estimator + NLP / residual suppression |
-| Reference | **Required** — `playback-ref` each 10 ms |
-| Block size | 10 ms @ 48 kHz (matches engine) |
-| CPU / stream | Typically &lt;1–2% of one core @ 48 kHz mono |
-| License | BSD-like (WebRTC `audio_processing` subset) |
-| Integration | C++ `AudioProcessing` shim → cgo |
+| Property     | Value                                                                           |
+| ------------ | ------------------------------------------------------------------------------- |
+| Type         | Frequency-domain adaptive filter + delay estimator + NLP / residual suppression |
+| Reference    | **Required** — `playback-ref` each 10 ms                                        |
+| Block size   | 10 ms @ 48 kHz (matches engine)                                                 |
+| CPU / stream | Typically &lt;1–2% of one core @ 48 kHz mono                                    |
+| License      | BSD-like (WebRTC `audio_processing` subset)                                     |
+| Integration  | C++ `AudioProcessing` shim → cgo                                                |
 
 **One AEC instance per mic stream** (host + each participant). Same `playback-ref` frame fed to each `ProcessReverseStream`; each `ProcessStream` returns echo-cancelled mic for the enhancement branch.
 
 ### Alternatives considered
 
-| Option | Why not primary |
-|--------|-----------------|
-| SpeexDSP MDF | Aging; weaker in reverberant TV rooms |
-| Custom NLMS/FDAF | High R&D for DTD + NLP stack |
-| Neural AEC (research) | Immature OSS; domain risk |
-| Correlation only | Does not cancel on active mic |
+| Option                | Why not primary                       |
+| --------------------- | ------------------------------------- |
+| SpeexDSP MDF          | Aging; weaker in reverberant TV rooms |
+| Custom NLMS/FDAF      | High R&D for DTD + NLP stack          |
+| Neural AEC (research) | Immature OSS; domain risk             |
+| Correlation only      | Does not cancel on active mic         |
 
 ---
 
@@ -129,12 +129,12 @@ Participant browsers may already apply AEC/NS. Further Spidercam AEC may help le
 
 ## Failure modes (TV-in-room)
 
-| Failure | Symptom | Mitigation |
-|---------|---------|------------|
-| Delay mismatch | Poor convergence | Ref trim; APM delay estimator; GCC-PHAT diagnostic |
-| Long reverb | High residual echo | Ducking + penalty; enable AEC; accept Teams tail |
-| Nonlinear TV speaker | Filter mis-models | Raw echoPenalty still applies |
-| Over-suppression | Thin local speech | Disable AEC on that stream |
+| Failure              | Symptom            | Mitigation                                         |
+| -------------------- | ------------------ | -------------------------------------------------- |
+| Delay mismatch       | Poor convergence   | Ref trim; APM delay estimator; GCC-PHAT diagnostic |
+| Long reverb          | High residual echo | Ducking + penalty; enable AEC; accept Teams tail   |
+| Nonlinear TV speaker | Filter mis-models  | Raw echoPenalty still applies                      |
+| Over-suppression     | Thin local speech  | Disable AEC on that stream                         |
 
 ---
 

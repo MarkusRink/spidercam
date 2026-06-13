@@ -137,13 +137,13 @@ type Encoder interface {
 
 Encoder settings (libx264):
 
-| Parameter | Value |
-|-----------|-------|
-| Profile | baseline (`avc1.42E01E`) |
-| Preset | `ultrafast` |
-| Tune | `zerolatency` |
-| B-frames | 0 |
-| Keyint | 15 (1 s @ 15 fps) |
+| Parameter  | Value                     |
+| ---------- | ------------------------- |
+| Profile    | baseline (`avc1.42E01E`)  |
+| Preset     | `ultrafast`               |
+| Tune       | `zerolatency`             |
+| B-frames   | 0                         |
+| Keyint     | 15 (1 s @ 15 fps)         |
 | Forced IDR | on `activeVideoId` change |
 
 ## Binary chunk format (WebSocket)
@@ -237,7 +237,9 @@ export class PreviewStream {
 
     const buf = new Uint8Array(ev.data as ArrayBuffer);
     const key = (buf[0] & 0x01) !== 0;
-    const pts = Number(new DataView(buf.buffer, buf.byteOffset + 1, 8).getBigUint64(0));
+    const pts = Number(
+      new DataView(buf.buffer, buf.byteOffset + 1, 8).getBigUint64(0),
+    );
     const len = new DataView(buf.buffer, buf.byteOffset + 9, 4).getUint32(0);
     const nal = buf.subarray(13, 13 + len);
 
@@ -265,8 +267,16 @@ export function OutputPreview() {
   return (
     <div class="flex gap-3">
       <canvas ref={canvasRef} width={640} height={360} class="bg-black" />
-      <VerticalVuMeter level={store.state?.outLevelDbfs} peak={store.state?.outPeakDbfs} label="OUT" />
-      <VerticalVuMeter level={store.state?.reference.rmsDbfs} peak={store.state?.reference.peakDbfs} label="REF" />
+      <VerticalVuMeter
+        level={store.state?.outLevelDbfs}
+        peak={store.state?.outPeakDbfs}
+        label="OUT"
+      />
+      <VerticalVuMeter
+        level={store.state?.reference.rmsDbfs}
+        peak={store.state?.reference.peakDbfs}
+        label="REF"
+      />
     </div>
   );
 }
@@ -282,38 +292,38 @@ Host page opens **two** WebSockets on mount: `/api/v1/ws` (control + `host-state
 
 ### System (build host)
 
-| Package | Purpose |
-|---------|---------|
+| Package       | Purpose                  |
+| ------------- | ------------------------ |
 | `libx264-dev` | H.264 encode for preview |
-| `pkg-config` | cgo libx264 discovery |
+| `pkg-config`  | cgo libx264 discovery    |
 
 PipeWire / v4l2 deps unchanged — see [capture.md](./capture.md).
 
 ### Go modules
 
-| Module | Purpose |
-|--------|---------|
-| `github.com/pion/webrtc/v4` | Participant ingress (unchanged) |
-| `github.com/pion/opus` | Opus decode (unchanged) |
-| cgo `libx264` | Preview encoder (`internal/preview/enc_x264.c`) — no pure-Go H.264 encoder in v1 |
+| Module                      | Purpose                                                                          |
+| --------------------------- | -------------------------------------------------------------------------------- |
+| `github.com/pion/webrtc/v4` | Participant ingress (unchanged)                                                  |
+| `github.com/pion/opus`      | Opus decode (unchanged)                                                          |
+| cgo `libx264`               | Preview encoder (`internal/preview/enc_x264.c`) — no pure-Go H.264 encoder in v1 |
 
 No new Go dependency for preview beyond cgo + libx264. Mock encoder avoids libx264 in `--mock` CI when `SPIDERCAM_MOCK_PREVIEW=1`.
 
 ### Host UI (npm)
 
-| API | Purpose |
-|-----|---------|
+| API                                                 | Purpose                           |
+| --------------------------------------------------- | --------------------------------- |
 | **WebCodecs** (`VideoDecoder`, `EncodedVideoChunk`) | Browser built-in — no npm package |
-| SolidJS / Vite / Tailwind | unchanged |
+| SolidJS / Vite / Tailwind                           | unchanged                         |
 
 Target browser: Chromium (Chrome/Edge). Host UI opened by `xdg-open` on Linux.
 
 ## Testing
 
-| Layer | What |
-|-------|------|
-| Go unit | `preview` chunk framing, subsample tick, `ForceKeyframe` on id change |
-| Go E2E | `GET /api/v1/ws/preview` → `preview-stream-init` → binary key chunk; `testdata/preview/keyframe.h264` |
-| Playwright+MSW | **Skip** preview decode — assert OUT/REF meters and timeline from mocked `host-state` only |
+| Layer          | What                                                                                                  |
+| -------------- | ----------------------------------------------------------------------------------------------------- |
+| Go unit        | `preview` chunk framing, subsample tick, `ForceKeyframe` on id change                                 |
+| Go E2E         | `GET /api/v1/ws/preview` → `preview-stream-init` → binary key chunk; `testdata/preview/keyframe.h264` |
+| Playwright+MSW | **Skip** preview decode — assert OUT/REF meters and timeline from mocked `host-state` only            |
 
 See [testing.md](../testing.md).

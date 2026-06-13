@@ -36,7 +36,8 @@ web/ui-theme/
   --color-spider-error: #ff5f57;
   --color-spider-meter-track: #1a1a1e;
 
-  --font-mono: "JetBrains Mono", "SF Mono", "Fira Code", ui-monospace, monospace;
+  --font-mono:
+    "JetBrains Mono", "SF Mono", "Fira Code", ui-monospace, monospace;
   --font-sans: system-ui, -apple-system, sans-serif;
 
   --radius-spider: 3px;
@@ -80,7 +81,9 @@ Stream grid:
 
 ```tsx
 <div class="grid grid-cols-5 gap-2 content-start font-mono">
-  <For each={streams}>{(m) => <StreamCard metric={m} selection={selection} />}</For>
+  <For each={streams}>
+    {(m) => <StreamCard metric={m} selection={selection} />}
+  </For>
 </div>
 ```
 
@@ -90,12 +93,16 @@ Participant shell — single card, centered:
 // web/participant/src/components/ParticipantShell.tsx
 <div class="flex min-h-screen items-center justify-center p-4">
   <div class="w-full max-w-[420px] space-y-3">
-    <ParticipantHeader />   {/* display name + routed dot + clientId */}
-    <LocalPreview />        {/* video + local VuMeter — always */}
-    <DeviceRows />          {/* mic/cam select + toggles — always */}
+    <ParticipantHeader /> {/* display name + routed dot + clientId */}
+    <LocalPreview /> {/* video + local VuMeter — always */}
+    <DeviceRows /> {/* mic/cam select + toggles — always */}
     <ConnectionToggle />
-    <Show when={phase === "connected"}><RoomStatus /></Show>
-    <Show when={phase === "reconnecting" || phase === "lost"}><LostHostBanner /></Show>
+    <Show when={phase === "connected"}>
+      <RoomStatus />
+    </Show>
+    <Show when={phase === "reconnecting" || phase === "lost"}>
+      <LostHostBanner />
+    </Show>
   </div>
 </div>
 ```
@@ -144,9 +151,7 @@ export function VerticalVuMeter(props: {
 
   return (
     <div class="flex flex-col items-center gap-1">
-      <div
-        class="relative w-3 rounded-(--radius-spider-sm) bg-(--color-spider-meter-track) overflow-hidden h-14"
-      >
+      <div class="relative w-3 rounded-(--radius-spider-sm) bg-(--color-spider-meter-track) overflow-hidden h-14">
         {clipped && (
           <div class="absolute top-0 inset-x-0 h-1 bg-(--color-spider-error)" />
         )}
@@ -182,10 +187,16 @@ const TIMELINE_COLORS: Record<MixerState, string> = {
 
 export function StateTimeline(props: { samples: MixerState[] }) {
   return (
-    <div class="flex h-2 w-full gap-px rounded-(--radius-spider-sm) overflow-hidden" role="img">
+    <div
+      class="flex h-2 w-full gap-px rounded-(--radius-spider-sm) overflow-hidden"
+      role="img"
+    >
       <For each={props.samples}>
         {(s) => (
-          <div class="flex-1 min-w-0" style={{ "background-color": TIMELINE_COLORS[s] }} />
+          <div
+            class="flex-1 min-w-0"
+            style={{ "background-color": TIMELINE_COLORS[s] }}
+          />
         )}
       </For>
     </div>
@@ -219,7 +230,7 @@ const opacity = 0.15 + 0.85 * clamp(props.scoreSmooth, 0, 1);
     height: "var(--stream-card-h)",
     "border-color": `color-mix(in srgb, var(--color-spider-accent) ${opacity * 100}%, var(--color-spider-border))`,
   }}
-/>
+/>;
 ```
 
 Independent of on-air dot: a challenger can have a bright border during HOLD without being routed.
@@ -231,11 +242,13 @@ Independent of on-air dot: a challenger can have a bright border during HOLD wit
 export function LoopDelayText(props: { estimate: LoopDelayEstimate }) {
   const known = props.estimate.known && props.estimate.ms != null;
   const ms = props.estimate.ms ?? 0;
-  const color =
-    !known ? "var(--color-spider-muted)"
-    : ms < 100 ? "var(--color-spider-accent)"
-    : ms <= 150 ? "var(--color-spider-warn)"
-    : "var(--color-spider-error)";
+  const color = !known
+    ? "var(--color-spider-muted)"
+    : ms < 100
+      ? "var(--color-spider-accent)"
+      : ms <= 150
+        ? "var(--color-spider-warn)"
+        : "var(--color-spider-error)";
 
   return (
     <span class="font-mono text-[10px] tabular-nums" style={{ color }}>
@@ -274,12 +287,12 @@ export function TransportBlock(props: { cells: TransportCell[] }) {
 
 **Thresholds** (participant):
 
-| Metric | Warn | Error |
-|--------|------|-------|
-| `packetLoss` | &gt; 1% | &gt; 3% |
-| `jitterMs` | &gt; 20 ms | &gt; 40 ms |
-| `jitterBufferFrames` | &gt; 5 | &gt; 10 |
-| `framesPerSecond` | &lt; 20 | &lt; 10 or missing |
+| Metric               | Warn       | Error              |
+| -------------------- | ---------- | ------------------ |
+| `packetLoss`         | &gt; 1%    | &gt; 3%            |
+| `jitterMs`           | &gt; 20 ms | &gt; 40 ms         |
+| `jitterBufferFrames` | &gt; 5     | &gt; 10            |
+| `framesPerSecond`    | &lt; 20    | &lt; 10 or missing |
 
 ### Stream processing row
 
@@ -293,21 +306,41 @@ export function StreamProcessingRow(props: {
     <div class="flex flex-col gap-0.5 text-[9px]">
       <div class="flex gap-2">
         <label class="flex items-center gap-1">
-          <input type="checkbox" checked={props.metric.aecEnabled}
-            onChange={(e) => props.onChange?.({ ...flags, aecEnabled: e.currentTarget.checked })} />
+          <input
+            type="checkbox"
+            checked={props.metric.aecEnabled}
+            onChange={(e) =>
+              props.onChange?.({
+                ...flags,
+                aecEnabled: e.currentTarget.checked,
+              })
+            }
+          />
           AEC
         </label>
         <label class="flex items-center gap-1">
-          <input type="checkbox" checked={props.metric.denoiseEnabled}
-            onChange={(e) => props.onChange?.({ ...flags, denoiseEnabled: e.currentTarget.checked })} />
+          <input
+            type="checkbox"
+            checked={props.metric.denoiseEnabled}
+            onChange={(e) =>
+              props.onChange?.({
+                ...flags,
+                denoiseEnabled: e.currentTarget.checked,
+              })
+            }
+          />
           NS
         </label>
       </div>
       <Show when={props.metric.aecEnabled}>
-        <span class="text-(--color-spider-muted)">AEC · {formatMs(props.metric.aecUs)}</span>
+        <span class="text-(--color-spider-muted)">
+          AEC · {formatMs(props.metric.aecUs)}
+        </span>
       </Show>
       <Show when={props.metric.denoiseEnabled}>
-        <span class="text-(--color-spider-muted)">NS · {formatMs(props.metric.denoiseUs)}</span>
+        <span class="text-(--color-spider-muted)">
+          NS · {formatMs(props.metric.denoiseUs)}
+        </span>
       </Show>
     </div>
   );
@@ -337,11 +370,17 @@ export function StreamCard(props: {
         <OnAirDot onAir={props.isOnAir} />
         <span class="truncate text-[10px]">{props.metric.name}</span>
       </div>
-      <VerticalVuMeter rmsDbfs={props.metric.rmsDbfs} peakDbfs={props.metric.peakDbfs} compact />
+      <VerticalVuMeter
+        rmsDbfs={props.metric.rmsDbfs}
+        peakDbfs={props.metric.peakDbfs}
+        compact
+      />
       <LoopDelayText estimate={props.metric.loopDelay} />
       <StreamProcessingRow
         metric={props.metric}
-        onChange={(flags) => props.onProcessingChange?.(props.metric.participantId, flags)}
+        onChange={(flags) =>
+          props.onProcessingChange?.(props.metric.participantId, flags)
+        }
       />
       <TransportBlock cells={transportCells(props.metric, props.isHost)} />
     </div>
@@ -353,10 +392,10 @@ No VAD pill. No score stack. No expand/collapse.
 
 ## Typography utilities
 
-| Pattern | Classes |
-|---------|---------|
-| Mono label | `font-mono text-[10px] text-(--color-spider-muted)` |
-| Metric value | `font-mono text-xs tabular-nums text-(--color-spider-text)` |
+| Pattern       | Classes                                                                   |
+| ------------- | ------------------------------------------------------------------------- |
+| Mono label    | `font-mono text-[10px] text-(--color-spider-muted)`                       |
+| Metric value  | `font-mono text-xs tabular-nums text-(--color-spider-text)`               |
 | Section title | `text-xs font-medium uppercase tracking-wide text-(--color-spider-muted)` |
 
 ## Panel / surface

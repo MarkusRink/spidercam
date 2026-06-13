@@ -50,10 +50,10 @@ When **disconnected**, hide room metrics (on-air, loop delay, SNR, transport) or
 
 ## Identity
 
-| Field | Source | UI |
-|-------|--------|-----|
-| **`clientId`** | Server `welcome` (UUID) | Muted mono under display name; routing key (`activeAudioId`, `mainTalkerId`) |
-| **Display name** | Client default `client-{random}`; user-editable | Header text input; cosmetic only — sent on `join` |
+| Field            | Source                                          | UI                                                                           |
+| ---------------- | ----------------------------------------------- | ---------------------------------------------------------------------------- |
+| **`clientId`**   | Server `welcome` (UUID)                         | Muted mono under display name; routing key (`activeAudioId`, `mainTalkerId`) |
+| **Display name** | Client default `client-{random}`; user-editable | Header text input; cosmetic only — sent on `join`                            |
 
 On first page load, generate default display name `client-{4–6 digit random}` if none stored. Persist display name + `clientId` in `sessionStorage`.
 
@@ -61,10 +61,10 @@ Server assigns **`clientId`** on every WebSocket connect (`welcome`). After host
 
 ## Connection toggle
 
-| State | WS | WebRTC | UI |
-|-------|-----|--------|-----|
-| **Disconnected** | closed | stopped | Local `getUserMedia` + preview; Connect button |
-| **Connected** | open | active | `join` sent; `participant-view` drives room block; Disconnect button |
+| State            | WS     | WebRTC  | UI                                                                   |
+| ---------------- | ------ | ------- | -------------------------------------------------------------------- |
+| **Disconnected** | closed | stopped | Local `getUserMedia` + preview; Connect button                       |
+| **Connected**    | open   | active  | `join` sent; `participant-view` drives room block; Disconnect button |
 
 **Connect:** open WS → `welcome` → `getUserMedia` (if not already) → `join { name, hasVideo, hasAudio }` → offer/answer/ICE.
 
@@ -89,10 +89,10 @@ function isRouted(view: ParticipantRoomView, myId: string): boolean {
 }
 ```
 
-| UI element | Binding |
-|------------|---------|
-| Header **red dot** | `activeAudioId === clientId` — routed to Teams output |
-| **On air:** line | `mainTalkerId` → `you` / `host` / participant display name; **no dot** on this row |
+| UI element         | Binding                                                                            |
+| ------------------ | ---------------------------------------------------------------------------------- |
+| Header **red dot** | `activeAudioId === clientId` — routed to Teams output                              |
+| **On air:** line   | `mainTalkerId` → `you` / `host` / participant display name; **no dot** on this row |
 
 During audio crossfade, `mainTalkerId` and `activeAudioId` can differ briefly; dot follows routing, label follows selected talker.
 
@@ -152,11 +152,18 @@ export class ParticipantSignaling {
     this.ws = new WebSocket(`ws://${location.host}/api/v1/ws`);
   }
 
-  onWelcome(handler: (clientId: string, view: ParticipantRoomView) => void): void;
+  onWelcome(
+    handler: (clientId: string, view: ParticipantRoomView) => void,
+  ): void;
   onView(handler: (view: ParticipantRoomView) => void): void;
   onClose(handler: (wasClean: boolean) => void): void;
 
-  sendJoin(name: string, hasVideo: boolean, hasAudio: boolean, clientId?: string): void;
+  sendJoin(
+    name: string,
+    hasVideo: boolean,
+    hasAudio: boolean,
+    clientId?: string,
+  ): void;
   sendLeave(): void;
   relaySDP(msg: Offer | Answer | ICE): void;
 }
@@ -180,7 +187,12 @@ export class ParticipantPeer {
 ## Store sketch
 
 ```ts
-type ConnectionPhase = "idle" | "connecting" | "connected" | "reconnecting" | "lost";
+type ConnectionPhase =
+  | "idle"
+  | "connecting"
+  | "connected"
+  | "reconnecting"
+  | "lost";
 
 export interface ParticipantStore {
   phase: ConnectionPhase;

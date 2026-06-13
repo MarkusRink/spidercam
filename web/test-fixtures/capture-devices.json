@@ -1,0 +1,14 @@
+{
+  "mics": [
+    { "id": "pw:source:0", "label": "Built-in Microphone" },
+    { "id": "pw:source:1", "label": "USB Audio Interface" }
+  ],
+  "cameras": [
+    { "id": "v4l2:/dev/video0", "label": "Integrated Webcam" },
+    { "id": "v4l2:/dev/video2", "label": "HD Pro Webcam C920" }
+  ],
+  "sinks": [
+    { "id": "pw:sink:0", "label": "Built-in Speakers" },
+    { "id": "pw:sink:1", "label": "HDMI Output" }
+  ]
+}

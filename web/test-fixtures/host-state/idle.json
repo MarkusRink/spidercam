@@ -1,0 +1,132 @@
+{
+  "type": "host-state",
+  "state": {
+    "participants": [
+      {
+        "id": "a3f7c2e1-0000-4000-8000-000000000001",
+        "name": "Alice",
+        "hasVideo": true,
+        "hasAudio": true,
+        "joinedAt": 1718280000000
+      }
+    ],
+    "metrics": [
+      {
+        "participantId": "host",
+        "name": "Host",
+        "role": "host",
+        "rmsDbfs": -48.2,
+        "peakDbfs": -44.0,
+        "speechLevelDbfs": -50.0,
+        "noiseFloorDbfs": -62.0,
+        "snrDb": 12.0,
+        "vad": false,
+        "vadHangoverMs": 0,
+        "score": 0.08,
+        "scoreSmooth": 0.06,
+        "scoreComponents": {
+          "level": 0.05,
+          "snr": 0.1,
+          "vad": 0.0,
+          "priority": 0.2,
+          "echoPenalty": 0.0
+        },
+        "rank": 2,
+        "gateGainDb": 0,
+        "duckingGainDb": 0,
+        "calibrationGain": 1.0,
+        "calibrationPhase": "idle",
+        "jitterBufferFrames": 0,
+        "delayOffsetMs": 0,
+        "isMainTalker": false,
+        "videoActive": true,
+        "audioActive": true,
+        "rttMs": null,
+        "packetLoss": null,
+        "jitterMs": null,
+        "bitrateKbps": null,
+        "framesPerSecond": null,
+        "lastUpdated": 1718280001000,
+        "loopDelay": { "ms": null, "uncertaintyMs": 0, "known": false },
+        "aecEnabled": false,
+        "denoiseEnabled": false,
+        "aecUs": 0,
+        "denoiseUs": 0
+      },
+      {
+        "participantId": "a3f7c2e1-0000-4000-8000-000000000001",
+        "name": "Alice",
+        "role": "participant",
+        "rmsDbfs": -52.0,
+        "peakDbfs": -46.5,
+        "speechLevelDbfs": -54.0,
+        "noiseFloorDbfs": -64.0,
+        "snrDb": 14.0,
+        "vad": false,
+        "vadHangoverMs": 0,
+        "score": 0.05,
+        "scoreSmooth": 0.04,
+        "scoreComponents": {
+          "level": 0.03,
+          "snr": 0.12,
+          "vad": 0.0,
+          "priority": 0.0,
+          "echoPenalty": 0.02
+        },
+        "rank": 1,
+        "gateGainDb": 0,
+        "duckingGainDb": 0,
+        "calibrationGain": 1.0,
+        "calibrationPhase": "idle",
+        "jitterBufferFrames": 2,
+        "delayOffsetMs": 0,
+        "isMainTalker": false,
+        "videoActive": true,
+        "audioActive": true,
+        "rttMs": 12.5,
+        "packetLoss": 0.1,
+        "jitterMs": 8.0,
+        "bitrateKbps": 320.0,
+        "framesPerSecond": 30.0,
+        "lastUpdated": 1718280001000,
+        "loopDelay": { "ms": null, "uncertaintyMs": 0, "known": false },
+        "aecEnabled": false,
+        "denoiseEnabled": false,
+        "aecUs": 0,
+        "denoiseUs": 0
+      }
+    ],
+    "reference": {
+      "streamId": "playback-ref",
+      "rmsDbfs": -58.0,
+      "peakDbfs": -52.0,
+      "vad": false,
+      "active": false
+    },
+    "selection": {
+      "activeVideoId": "host",
+      "activeAudioId": "host",
+      "mainTalkerId": "host",
+      "mixerState": "SILENCE",
+      "holdRemainingMs": 0,
+      "crossfade": null,
+      "switchEvents": [],
+      "reason": "silence",
+      "timestamp": 1718280001000
+    },
+    "capture": {
+      "micId": "pw:source:0",
+      "micLabel": "Built-in Microphone",
+      "cameraId": "v4l2:/dev/video0",
+      "cameraLabel": "Integrated Webcam",
+      "sinkId": "pw:sink:0",
+      "sinkLabel": "Built-in Speakers"
+    },
+    "outputHealthy": true,
+    "globalLatencyMs": null,
+    "outLevelDbfs": -60.0,
+    "outPeakDbfs": -55.0,
+    "enhancementBudgetPct": 0,
+    "participantUrl": "http://192.168.1.10:1234/"
+  }
+}

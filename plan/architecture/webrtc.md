@@ -64,7 +64,9 @@ export class ParticipantPeer {
   constructor(private signaling: ParticipantSignaling) {}
 
   async start(localStream: MediaStream): Promise<void> {
-    this.pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+    this.pc = new RTCPeerConnection({
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+    });
     // add tracks, create offer, exchange via :1234/api/v1/ws
   }
 }

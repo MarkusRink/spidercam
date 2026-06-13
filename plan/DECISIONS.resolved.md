@@ -1,26 +1,26 @@
 # Resolved decisions
 
-| ID | Decision | Rationale | Date |
-|----|----------|-----------|------|
-| D1 | Dual-port WS split | `:1234` participant-view + WebRTC; `:1235` full host-state. Different channels by construction. | 2026-06-11 |
-| D2 | (superseded) | Replaced by Go dual-port — host UI on `:1235` loopback only. | 2026-06-11 |
-| D4 | Omit `cpuPercent` | OS-level monitoring sufficient. | 2026-06-11 |
-| D7 | Pull-based mixer in Go | Engine ticker @ 10 ms; jitter buffers per stream. | 2026-06-11 |
-| D9 | SolidJS for UIs | Host + participant static SPAs. | 2026-06-11 |
-| D10 | Tailwind CSS v4 | Shared `web/ui-theme`. | 2026-06-11 |
-| D13 | Go + Pion daemon | Single process: native capture, WebRTC hub, mixer, virtual output. No Electron/Node media path. | 2026-06-11 |
-| D14 | Playback reference | Host speaker monitor = Teams room audio; echo correlation + host-configurable duck. | 2026-06-11 |
-| D5 | Passive loop latency | GCC-PHAT ref↔mic; per-participant bar + global max; `—` when unknown. | 2026-06-11 |
-| D8 | No host VAD special handling | Host mic competes on score only; no force-host or host-VAD ducking. | 2026-06-11 |
-| D11 | PipeWire + C capture | Thin C shim for PW mic + sink monitor; host UI device pickers. | 2026-06-11 |
-| D6 | Testing / CI | Static `/` + API `/api`; Go WS/REST E2E; Playwright+MSW UI; single CI gate. | 2026-06-11 |
-| D12 | Reference ducking | echoPenalty + duck slider 0…−12 dB; session RAM. | 2026-06-11 |
-| D15 | Host UI layout | Timeline, vertical meters, settings panel, session-only config. | 2026-06-11 |
-| D16 | Host preview transport | H.264 @ 15 fps on `/api/v1/ws/preview`; WebCodecs in browser; libx264 cgo in daemon. | 2026-06-11 |
-| D17 | Dual-branch audio pipeline | Raw analysis tap (scores, echoPenalty, loop delay) + enhancement branch (AEC, RNNoise) for mixer output. | 2026-06-11 |
-| D18 | Per-stream AEC | WebRTC APM AEC3; one instance per mic; `playback-ref` far-end; host toggle per card; default off. | 2026-06-11 |
-| D19 | Per-stream denoise | RNNoise via cgo; host toggle per card; `aecUs`/`denoiseUs` + `enhancementBudgetPct`; default off. | 2026-06-11 |
-| D20 | Participant single screen | One viewport; clientId UUID + cosmetic name; header routed dot; lost-host auto-reconnect. | 2026-06-13 |
+| ID  | Decision                     | Rationale                                                                                                | Date       |
+| --- | ---------------------------- | -------------------------------------------------------------------------------------------------------- | ---------- |
+| D1  | Dual-port WS split           | `:1234` participant-view + WebRTC; `:1235` full host-state. Different channels by construction.          | 2026-06-11 |
+| D2  | (superseded)                 | Replaced by Go dual-port — host UI on `:1235` loopback only.                                             | 2026-06-11 |
+| D4  | Omit `cpuPercent`            | OS-level monitoring sufficient.                                                                          | 2026-06-11 |
+| D7  | Pull-based mixer in Go       | Engine ticker @ 10 ms; jitter buffers per stream.                                                        | 2026-06-11 |
+| D9  | SolidJS for UIs              | Host + participant static SPAs.                                                                          | 2026-06-11 |
+| D10 | Tailwind CSS v4              | Shared `web/ui-theme`.                                                                                   | 2026-06-11 |
+| D13 | Go + Pion daemon             | Single process: native capture, WebRTC hub, mixer, virtual output. No Electron/Node media path.          | 2026-06-11 |
+| D14 | Playback reference           | Host speaker monitor = Teams room audio; echo correlation + host-configurable duck.                      | 2026-06-11 |
+| D5  | Passive loop latency         | GCC-PHAT ref↔mic; per-participant bar + global max; `—` when unknown.                                    | 2026-06-11 |
+| D8  | No host VAD special handling | Host mic competes on score only; no force-host or host-VAD ducking.                                      | 2026-06-11 |
+| D11 | PipeWire + C capture         | Thin C shim for PW mic + sink monitor; host UI device pickers.                                           | 2026-06-11 |
+| D6  | Testing / CI                 | Static `/` + API `/api`; Go WS/REST E2E; Playwright+MSW UI; single CI gate.                              | 2026-06-11 |
+| D12 | Reference ducking            | echoPenalty + duck slider 0…−12 dB; session RAM.                                                         | 2026-06-11 |
+| D15 | Host UI layout               | Timeline, vertical meters, settings panel, session-only config.                                          | 2026-06-11 |
+| D16 | Host preview transport       | H.264 @ 15 fps on `/api/v1/ws/preview`; WebCodecs in browser; libx264 cgo in daemon.                     | 2026-06-11 |
+| D17 | Dual-branch audio pipeline   | Raw analysis tap (scores, echoPenalty, loop delay) + enhancement branch (AEC, RNNoise) for mixer output. | 2026-06-11 |
+| D18 | Per-stream AEC               | WebRTC APM AEC3; one instance per mic; `playback-ref` far-end; host toggle per card; default off.        | 2026-06-11 |
+| D19 | Per-stream denoise           | RNNoise via cgo; host toggle per card; `aecUs`/`denoiseUs` + `enhancementBudgetPct`; default off.        | 2026-06-11 |
+| D20 | Participant single screen    | One viewport; clientId UUID + cosmetic name; header routed dot; lost-host auto-reconnect.                | 2026-06-13 |
 
 ## D1 — Host vs participant state channel
 

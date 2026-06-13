@@ -109,35 +109,35 @@ func (s *PreviewHub) HandleUpgrade(w http.ResponseWriter, r *http.Request) {
 
 ### Host control socket (`/api/v1/ws`)
 
-| Type | Direction | Rate |
-|------|-----------|------|
-| `host-state` | server → UI | 50 Hz |
-| `config` | UI → server | on save |
-| `list-capture-devices` | UI → server | settings open |
-| `capture-devices` | server → UI | device list response |
-| `set-capture-devices` | UI → server | device save |
-| `set-stream-processing` | UI → server | per-card AEC/NS toggle |
-| `capture-devices-updated` | server → UI | after reopen |
-| `copy-participant-url` | UI → server | on click → `participant-url` |
+| Type                      | Direction   | Rate                         |
+| ------------------------- | ----------- | ---------------------------- |
+| `host-state`              | server → UI | 50 Hz                        |
+| `config`                  | UI → server | on save                      |
+| `list-capture-devices`    | UI → server | settings open                |
+| `capture-devices`         | server → UI | device list response         |
+| `set-capture-devices`     | UI → server | device save                  |
+| `set-stream-processing`   | UI → server | per-card AEC/NS toggle       |
+| `capture-devices-updated` | server → UI | after reopen                 |
+| `copy-participant-url`    | UI → server | on click → `participant-url` |
 
 ### Host preview socket (`/api/v1/ws/preview`)
 
-| Type | Direction | Rate |
-|------|-----------|------|
-| `preview-stream-init` | server → UI | once per connect |
-| `preview-cut` | server → UI | on `activeVideoId` change |
-| H.264 binary chunks | server → UI | 15 fps |
+| Type                  | Direction   | Rate                      |
+| --------------------- | ----------- | ------------------------- |
+| `preview-stream-init` | server → UI | once per connect          |
+| `preview-cut`         | server → UI | on `activeVideoId` change |
+| H.264 binary chunks   | server → UI | 15 fps                    |
 
 Details: [architecture/preview.md](./preview.md).
 
 ## Participant message types
 
-| Type | Direction | Rate |
-|------|-----------|------|
-| `welcome` | server → client | once per WS connect |
-| `join` / `leave` | client → server | on action / auto-reconnect |
-| `participant-view` | server → client | on change, max 10 Hz |
-| `offer` / `answer` / `ice-candidate` | both | on demand |
+| Type                                 | Direction       | Rate                       |
+| ------------------------------------ | --------------- | -------------------------- |
+| `welcome`                            | server → client | once per WS connect        |
+| `join` / `leave`                     | client → server | on action / auto-reconnect |
+| `participant-view`                   | server → client | on change, max 10 Hz       |
+| `offer` / `answer` / `ice-candidate` | both            | on demand                  |
 
 ### Reconnect (client behaviour)
 
@@ -151,10 +151,17 @@ Server does not hold long-lived session state across daemon restarts: each new W
 // web/participant/src/signaling.ts
 export class ParticipantSignaling {
   connect(url = `ws://${location.host}/api/v1/ws`): Promise<void>;
-  onWelcome(handler: (clientId: string, view: ParticipantRoomView) => void): void;
+  onWelcome(
+    handler: (clientId: string, view: ParticipantRoomView) => void,
+  ): void;
   onView(handler: (view: ParticipantRoomView) => void): void;
   onClose(handler: (wasClean: boolean) => void): void;
-  sendJoin(name: string, hasVideo: boolean, hasAudio: boolean, clientId?: string): void;
+  sendJoin(
+    name: string,
+    hasVideo: boolean,
+    hasAudio: boolean,
+    clientId?: string,
+  ): void;
   sendLeave(): void;
 }
 
@@ -165,7 +172,10 @@ export class HostSignaling {
   sendConfig(partial: Partial<HostConfig>): void;
   listCaptureDevices(): void;
   setCaptureDevices(sel: CaptureSelection): void;
-  setStreamProcessing(participantId: string, flags: StreamProcessingFlags): void;
+  setStreamProcessing(
+    participantId: string,
+    flags: StreamProcessingFlags,
+  ): void;
 }
 
 // web/host/src/preview-stream.ts

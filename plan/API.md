@@ -8,9 +8,9 @@ Each listener serves the SPA at `/` and the API at `/api` on the **same origin**
 
 ## Overview
 
-| Port | Bind | REST | WebSocket |
-|------|------|------|------------|
-| **1234** | `0.0.0.0` | `GET /api/health` | `GET /api/v1/ws` — participant signaling |
+| Port     | Bind        | REST                             | WebSocket                                                            |
+| -------- | ----------- | -------------------------------- | -------------------------------------------------------------------- |
+| **1234** | `0.0.0.0`   | `GET /api/health`                | `GET /api/v1/ws` — participant signaling                             |
 | **1235** | `127.0.0.1` | see [Host REST](#host-rest-1235) | `GET /api/v1/ws` — control; `GET /api/v1/ws/preview` — H.264 preview |
 
 Participant port never exposes host `RoomState` or preview. Host port never accepts participant `join` / WebRTC relay.
@@ -122,12 +122,12 @@ WS equivalent: `set-stream-processing`.
 
 ### Server → client
 
-| `type` | Payload | Rate | Type |
-|--------|---------|------|------|
-| `host-state` | `state: RoomState` | 50 Hz | [`HostStateMsg`](./domain/messages.md) |
-| `capture-devices` | `devices: CaptureDevices` | on request | [`CaptureDevicesMsg`](./domain/messages.md) |
+| `type`                    | Payload                   | Rate         | Type                                               |
+| ------------------------- | ------------------------- | ------------ | -------------------------------------------------- |
+| `host-state`              | `state: RoomState`        | 50 Hz        | [`HostStateMsg`](./domain/messages.md)             |
+| `capture-devices`         | `devices: CaptureDevices` | on request   | [`CaptureDevicesMsg`](./domain/messages.md)        |
 | `capture-devices-updated` | `state`, optional `error` | after reopen | [`CaptureDevicesUpdatedMsg`](./domain/messages.md) |
-| `participant-url` | `url: string` | on copy | see below |
+| `participant-url`         | `url: string`             | on copy      | see below                                          |
 
 ```go
 type ParticipantURLMsg struct {
@@ -138,13 +138,13 @@ type ParticipantURLMsg struct {
 
 ### Client → server
 
-| `type` | Body | Response |
-|--------|------|----------|
-| `config` | `config: Partial<HostConfig>` | applies immediately; next `host-state` reflects change |
-| `list-capture-devices` | — | `capture-devices` |
-| `set-capture-devices` | `selection: CaptureSelection` | `capture-devices-updated` |
-| `set-stream-processing` | `participantId`, `flags: StreamProcessingFlags` | next `host-state` |
-| `copy-participant-url` | — | `participant-url` |
+| `type`                  | Body                                            | Response                                               |
+| ----------------------- | ----------------------------------------------- | ------------------------------------------------------ |
+| `config`                | `config: Partial<HostConfig>`                   | applies immediately; next `host-state` reflects change |
+| `list-capture-devices`  | —                                               | `capture-devices`                                      |
+| `set-capture-devices`   | `selection: CaptureSelection`                   | `capture-devices-updated`                              |
+| `set-stream-processing` | `participantId`, `flags: StreamProcessingFlags` | next `host-state`                                      |
+| `copy-participant-url`  | —                                               | `participant-url`                                      |
 
 Host UI **never** sends metrics, selection, or preview data — daemon owns the engine.
 
@@ -188,9 +188,9 @@ Binary frame — not JSON:
 [flags: u8][pts_us: u64 BE][nal_len: u32 BE][h264_au: nal_len bytes]
 ```
 
-| Flag bit | Meaning |
-|----------|---------|
-| `0x01` | keyframe (IDR) |
+| Flag bit | Meaning        |
+| -------- | -------------- |
+| `0x01`   | keyframe (IDR) |
 
 ### Client → server
 
@@ -216,11 +216,11 @@ No other REST routes on `:1234` in v1.
 
 ### Server → client
 
-| `type` | Payload | When |
-|--------|---------|------|
-| `welcome` | `clientId`, `view: ParticipantRoomView` | on connect |
-| `participant-view` | `view: ParticipantRoomView` | selection/join/leave, max 10 Hz |
-| `error` | `message` | validation / room errors |
+| `type`             | Payload                                 | When                            |
+| ------------------ | --------------------------------------- | ------------------------------- |
+| `welcome`          | `clientId`, `view: ParticipantRoomView` | on connect                      |
+| `participant-view` | `view: ParticipantRoomView`             | selection/join/leave, max 10 Hz |
+| `error`            | `message`                               | validation / room errors        |
 
 ```go
 type WelcomeMsg struct {
@@ -244,13 +244,13 @@ type ErrorMsg struct {
 
 ### Client → server
 
-| `type` | Body |
-|--------|------|
-| `join` | `name`, `hasVideo`, `hasAudio` → [`JoinMsg`](./domain/messages.md) |
-| `leave` | — |
-| `offer` | `sdp` — WebRTC offer |
-| `answer` | `sdp` — WebRTC answer (if hub offers) |
-| `ice-candidate` | `candidate` — ICE candidate JSON string |
+| `type`          | Body                                                               |
+| --------------- | ------------------------------------------------------------------ |
+| `join`          | `name`, `hasVideo`, `hasAudio` → [`JoinMsg`](./domain/messages.md) |
+| `leave`         | —                                                                  |
+| `offer`         | `sdp` — WebRTC offer                                               |
+| `answer`        | `sdp` — WebRTC answer (if hub offers)                              |
+| `ice-candidate` | `candidate` — ICE candidate JSON string                            |
 
 ```go
 type JoinMsg struct {
@@ -286,9 +286,9 @@ Relay handled by Pion hub — [architecture/webrtc.md](./architecture/webrtc.md)
 
 ## Static assets
 
-| Method | Path | Port | Response |
-|--------|------|------|----------|
-| `GET` | `/*` | 1234 / 1235 | Embedded Solid SPA (`index.html` fallback) |
+| Method | Path | Port        | Response                                   |
+| ------ | ---- | ----------- | ------------------------------------------ |
+| `GET`  | `/*` | 1234 / 1235 | Embedded Solid SPA (`index.html` fallback) |
 
 Vite dev proxies `/api` → daemon; production UIs call same-origin `/api`.
 
@@ -296,12 +296,12 @@ Vite dev proxies `/api` → daemon; production UIs call same-origin `/api`.
 
 ## Error conventions
 
-| HTTP | When |
-|------|------|
+| HTTP  | When                                |
+| ----- | ----------------------------------- |
 | `400` | malformed JSON, out-of-range config |
-| `404` | unknown `/api` path |
-| `405` | wrong method |
-| `500` | capture reopen / internal failure |
+| `404` | unknown `/api` path                 |
+| `405` | wrong method                        |
+| `500` | capture reopen / internal failure   |
 
 WebSocket: recoverable errors as `error` JSON on participant socket; host control socket logs to daemon stderr for v1 (no `error` type on `:1235` control WS).
 
@@ -309,13 +309,13 @@ WebSocket: recoverable errors as `error` JSON on participant socket; host contro
 
 ## Rate summary
 
-| Channel | Rate |
-|---------|------|
-| `host-state` | 50 Hz |
-| Preview H.264 | 15 fps |
-| `participant-view` | on change, max 10 Hz |
-| Transport stats in `host-state` | 1 Hz |
-| Loop delay fields | ~0.3 Hz |
+| Channel                         | Rate                 |
+| ------------------------------- | -------------------- |
+| `host-state`                    | 50 Hz                |
+| Preview H.264                   | 15 fps               |
+| `participant-view`              | on change, max 10 Hz |
+| Transport stats in `host-state` | 1 Hz                 |
+| Loop delay fields               | ~0.3 Hz              |
 
 ---
 

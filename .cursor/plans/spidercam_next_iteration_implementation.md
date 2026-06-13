@@ -6,14 +6,14 @@ Companion to [`spidercam_next_iteration_e83e1b88.plan.md`](./spidercam_next_iter
 
 ## Delivery phases
 
-| Phase | Scope | Unblocks |
-|-------|-------|----------|
-| **P0** | `apps/electron`, always-on host, seat removal | Real host shell, simplified protocol |
-| **P1** | Host UI v2 layout (stub metrics) | Visual target, incremental DOM |
-| **P2** | Participant UI v2 | End-user join flow |
-| **P3** | Score selector + equal-power crossfade | Mixer brain widgets with real data |
-| **P4** | Frame audio engine (10 ms loop) | VAD, SNR, calibration, full stream strips |
-| **P5** | AEC + limiter (optional polish) | Teams echo reduction |
+| Phase  | Scope                                         | Unblocks                                  |
+| ------ | --------------------------------------------- | ----------------------------------------- |
+| **P0** | `apps/electron`, always-on host, seat removal | Real host shell, simplified protocol      |
+| **P1** | Host UI v2 layout (stub metrics)              | Visual target, incremental DOM            |
+| **P2** | Participant UI v2                             | End-user join flow                        |
+| **P3** | Score selector + equal-power crossfade        | Mixer brain widgets with real data        |
+| **P4** | Frame audio engine (10 ms loop)               | VAD, SNR, calibration, full stream strips |
+| **P5** | AEC + limiter (optional polish)               | Teams echo reduction                      |
 
 Phases P0–P2 can ship UI with **legacy level fields bridged** into new metric names; P3+ replaces routing math.
 
@@ -55,7 +55,10 @@ export function normSnr(snr: number): number {
   return clamp(snr / 20, 0, 1); // [0, 20] dB → [0, 1]
 }
 
-export function frameScore(components: ScoreComponents, w: ScoreWeights): number {
+export function frameScore(
+  components: ScoreComponents,
+  w: ScoreWeights,
+): number {
   return clamp(
     w.level * components.level +
       w.snr * components.snr +
@@ -120,12 +123,12 @@ Per stream: HPF (~100 Hz) → WebRTC NS (level 1–2) → conservative compresso
 
 ### v1 policies (planner should encode explicitly)
 
-| Policy | Research recommendation | Spidercam v1 default |
-|--------|-------------------------|----------------------|
-| Overlapping speech | Single best vs dual −3 dB mix | **Single best talker** |
-| Silence output | Muted vs low ambience | **Near-silence** (heavy gate) |
-| Orphan room speech | No geometry | **Host priority + SNR**; duck participants when host VAD |
-| Echo on participant streams | Down-weight correlated | **echoPenalty** stub 0 until far-end ref exists |
+| Policy                      | Research recommendation       | Spidercam v1 default                                     |
+| --------------------------- | ----------------------------- | -------------------------------------------------------- |
+| Overlapping speech          | Single best vs dual −3 dB mix | **Single best talker**                                   |
+| Silence output              | Muted vs low ambience         | **Near-silence** (heavy gate)                            |
+| Orphan room speech          | No geometry                   | **Host priority + SNR**; duck participants when host VAD |
+| Echo on participant streams | Down-weight correlated        | **echoPenalty** stub 0 until far-end ref exists          |
 
 ---
 
@@ -188,7 +191,9 @@ export async function startServer(webDist: string): Promise<ServerHandle> {
   const { createApp } = await import("@spidercam/server");
   const port = Number(process.env.SPIDERCAM_PORT ?? 9847);
   const { httpServer } = createApp({ webDist });
-  await new Promise<void>((resolve) => httpServer.listen(port, "0.0.0.0", resolve));
+  await new Promise<void>((resolve) =>
+    httpServer.listen(port, "0.0.0.0", resolve),
+  );
   return {
     port,
     stop: () =>
@@ -209,7 +214,8 @@ export function participantUrl(port: number): string {
   const ip =
     Object.values(ifaces)
       .flat()
-      .find((i) => i && i.family === "IPv4" && !i.internal)?.address ?? "localhost";
+      .find((i) => i && i.family === "IPv4" && !i.internal)?.address ??
+    "localhost";
   return `http://${ip}:${port}/`;
 }
 ```
@@ -293,7 +299,8 @@ contextBridge.exposeInMainWorld("spidercam", {
 app.get("/host.html", (_req, res, next) => {
   // DECISION: 404 for non-loopback in production, or always serve for dev?
   const remote = req.socket.remoteAddress;
-  const local = remote === "127.0.0.1" || remote === "::1" || remote === "::ffff:127.0.0.1";
+  const local =
+    remote === "127.0.0.1" || remote === "::1" || remote === "::ffff:127.0.0.1";
   if (!local && process.env.SPIDERCAM_PUBLIC_HOST !== "1") {
     res.status(404).send("host dashboard is electron-only");
     return;
@@ -465,7 +472,12 @@ export type SignalingMessage =
   | { type: "room-update"; room: RoomState }
   | { type: "offer"; from: string; to: string; sdp: SessionDescription }
   | { type: "answer"; from: string; to: string; sdp: SessionDescription }
-  | { type: "ice-candidate"; from: string; to: string; candidate: IceCandidate | null }
+  | {
+      type: "ice-candidate";
+      from: string;
+      to: string;
+      candidate: IceCandidate | null;
+    }
   | { type: "metrics"; from: string; metrics: Partial<StreamMetrics> }
   | { type: "selection"; selection: SelectionState }
   | { type: "config"; config: Partial<HostConfig> }
@@ -539,7 +551,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function startHost(): Promise<void> {
   config = { ...DEFAULT_HOST_CONFIG };
-  hostStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+  hostStream = await navigator.mediaDevices.getUserMedia({
+    video: true,
+    audio: true,
+  });
   // ... same pipeline, no seat/config form ...
   signaling.send({
     type: "join",
@@ -569,7 +584,11 @@ signaling.send({
 // reportStats — drop seat arg
 const metrics = peer
   ? await collectStats(peer.pc, signaling.clientId, audioLevel)
-  : { participantId: signaling.clientId, audioLevel, audioActive: audioLevel > 0.02 };
+  : {
+      participantId: signaling.clientId,
+      audioLevel,
+      audioActive: audioLevel > 0.02,
+    };
 ```
 
 ### P0.5 Migration shim for metrics (P0–P2)
@@ -597,21 +616,21 @@ Use in `room.updateMetrics` and `collectStats`.
 
 ### P0.6 Files to touch (seat removal checklist)
 
-| File | Change |
-|------|--------|
-| `packages/shared/src/types.ts` | New shapes above |
-| `packages/shared/src/messages.ts` | `join` without `seat` |
-| `packages/shared/src/selector.ts` | Delete `seatDistance`, `findNearestConnected` (P3 rewrite) |
-| `packages/shared/src/selector.test.ts` | Remove seat tests; stub until P3 |
-| `packages/shared/src/messages.test.ts` | Update join fixture |
-| `apps/server/src/signaling.ts` | `join` handler |
-| `apps/server/src/room.ts` | `getState`, `addClient`, `updateMetrics` |
-| `apps/server/test/room.test.ts` | No `seatCount` |
-| `apps/web/src/participant.ts` | UI + join |
-| `apps/web/src/host/dashboard.ts` | Auto-start |
-| `apps/web/src/webrtc/stats.ts` | Drop `seat` param |
-| `e2e/*.spec.ts` | No start screen / seat |
-| `README.md` | Electron start, no seats |
+| File                                   | Change                                                     |
+| -------------------------------------- | ---------------------------------------------------------- |
+| `packages/shared/src/types.ts`         | New shapes above                                           |
+| `packages/shared/src/messages.ts`      | `join` without `seat`                                      |
+| `packages/shared/src/selector.ts`      | Delete `seatDistance`, `findNearestConnected` (P3 rewrite) |
+| `packages/shared/src/selector.test.ts` | Remove seat tests; stub until P3                           |
+| `packages/shared/src/messages.test.ts` | Update join fixture                                        |
+| `apps/server/src/signaling.ts`         | `join` handler                                             |
+| `apps/server/src/room.ts`              | `getState`, `addClient`, `updateMetrics`                   |
+| `apps/server/test/room.test.ts`        | No `seatCount`                                             |
+| `apps/web/src/participant.ts`          | UI + join                                                  |
+| `apps/web/src/host/dashboard.ts`       | Auto-start                                                 |
+| `apps/web/src/webrtc/stats.ts`         | Drop `seat` param                                          |
+| `e2e/*.spec.ts`                        | No start screen / seat                                     |
+| `README.md`                            | Electron start, no seats                                   |
 
 ---
 
@@ -632,11 +651,30 @@ Add to `apps/web/src/styles/global.css`:
   padding: 8px;
 }
 
-.host-header { grid-column: 1 / -1; }
-.host-output { grid-row: 2; grid-column: 1; min-height: 0; }
-.host-brain { grid-row: 2; grid-column: 2; min-height: 0; overflow: auto; }
-.host-rail { grid-column: 1 / -1; display: flex; gap: 6px; overflow-x: auto; }
-.host-footer { grid-column: 1 / -1; position: relative; }
+.host-header {
+  grid-column: 1 / -1;
+}
+.host-output {
+  grid-row: 2;
+  grid-column: 1;
+  min-height: 0;
+}
+.host-brain {
+  grid-row: 2;
+  grid-column: 2;
+  min-height: 0;
+  overflow: auto;
+}
+.host-rail {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+}
+.host-footer {
+  grid-column: 1 / -1;
+  position: relative;
+}
 
 .stream-strip {
   flex: 0 0 72px;
@@ -644,9 +682,15 @@ Add to `apps/web/src/styles/global.css`:
   /* ... */
 }
 
-.vad-pill { /* active/inactive */ }
-.score-stack { /* micro-bars */ }
-.hold-badge { /* LOCKED | HOLD 420ms */ }
+.vad-pill {
+  /* active/inactive */
+}
+.score-stack {
+  /* micro-bars */
+}
+.hold-badge {
+  /* LOCKED | HOLD 420ms */
+}
 ```
 
 ### P1.2 Dashboard controller split
@@ -661,7 +705,11 @@ apps/web/src/host/
 **`dashboard-view.ts` interface**
 
 ```ts
-import type { RoomState, SelectionState, StreamMetrics } from "@spidercam/shared";
+import type {
+  RoomState,
+  SelectionState,
+  StreamMetrics,
+} from "@spidercam/shared";
 
 export interface HostViewHandles {
   header: {
@@ -680,7 +728,10 @@ export interface HostViewHandles {
     setMainTalker(id: string, name: string): void;
   };
   rail: {
-    syncStreams(streams: StreamMetrics[], selection: SelectionState | null): void;
+    syncStreams(
+      streams: StreamMetrics[],
+      selection: SelectionState | null,
+    ): void;
     expandStream(id: string | null): void;
   };
   footer: {
@@ -699,7 +750,10 @@ export function mountHostView(root: HTMLElement): HostViewHandles {
 **Update loops** (from plan):
 
 ```ts
-function startUiLoops(handles: HostViewHandles, getState: () => RoomState): void {
+function startUiLoops(
+  handles: HostViewHandles,
+  getState: () => RoomState,
+): void {
   const raf = () => {
     // meters, VAD pills, crossfade overlay
     requestAnimationFrame(raf);
@@ -759,11 +813,15 @@ export interface ParticipantView {
   }): void;
 }
 
-function routingLabel(room: RoomState, myId: string): { onAir: string | null; routed: boolean } {
+function routingLabel(
+  room: RoomState,
+  myId: string,
+): { onAir: string | null; routed: boolean } {
   const sel = room.selection;
   if (!sel) return { onAir: null, routed: false };
   const main = room.participants.find((p) => p.id === sel.mainTalkerId);
-  const onAir = main?.name ?? (sel.mainTalkerId === HOST_STREAM_ID ? "host" : null);
+  const onAir =
+    main?.name ?? (sel.mainTalkerId === HOST_STREAM_ID ? "host" : null);
   const routed = sel.activeAudioId === myId;
   return { onAir, routed };
 }
@@ -784,7 +842,12 @@ Remove `#seat`. Keep name, server URL, device toggles. Mobile `max-width: 420px`
 **`packages/shared/src/selector.ts`**
 
 ```ts
-import type { HostConfig, SelectionState, StreamMetrics, MixerState } from "./types.js";
+import type {
+  HostConfig,
+  SelectionState,
+  StreamMetrics,
+  MixerState,
+} from "./types.js";
 import { HOST_STREAM_ID } from "./types.js";
 
 export interface SelectorState {
@@ -816,7 +879,10 @@ export function createSelectorState(): SelectorState {
   };
 }
 
-function normalizeScore(c: HostConfig["scoreWeights"], s: StreamMetrics): number {
+function normalizeScore(
+  c: HostConfig["scoreWeights"],
+  s: StreamMetrics,
+): number {
   const w = c.scoreWeights;
   const comp = s.scoreComponents;
   const raw =
@@ -835,12 +901,17 @@ function ranked(streams: StreamMetrics[], config: HostConfig): StreamMetrics[] {
     .map((s, i) => ({ ...s, rank: i + 1 }));
 }
 
-export function selectSources(input: SelectorInput, state: SelectorState): SelectionState {
+export function selectSources(
+  input: SelectorInput,
+  state: SelectorState,
+): SelectionState {
   const now = input.now ?? Date.now();
   const { config, streams } = input;
   const rankedStreams = ranked(streams, config);
   const top = rankedStreams[0];
-  const current = rankedStreams.find((s) => s.participantId === state.lastAudioId) ?? rankedStreams[0];
+  const current =
+    rankedStreams.find((s) => s.participantId === state.lastAudioId) ??
+    rankedStreams[0];
 
   let mixerState: MixerState = "SILENCE";
   let audioId = state.lastAudioId;
@@ -848,7 +919,8 @@ export function selectSources(input: SelectorInput, state: SelectorState): Selec
 
   const topScore = top?.score ?? 0;
   const currentScore = current?.score ?? 0;
-  const aboveThreshold = (top?.rmsDbfs ?? -60) > linearToDbfs(config.audioThreshold);
+  const aboveThreshold =
+    (top?.rmsDbfs ?? -60) > linearToDbfs(config.audioThreshold);
 
   if (!aboveThreshold) {
     mixerState = "SILENCE";
@@ -882,7 +954,11 @@ export function selectSources(input: SelectorInput, state: SelectorState): Selec
       : config.defaultVideoId;
 
   const holdRemainingMs = Math.max(0, state.holdUntil - now);
-  const crossfade = advanceCrossfade(state, input.frameDtMs ?? 0, config.crossfadeMs);
+  const crossfade = advanceCrossfade(
+    state,
+    input.frameDtMs ?? 0,
+    config.crossfadeMs,
+  );
 
   state.lastAudioId = audioId;
   state.lastVideoId = videoId;
@@ -920,9 +996,15 @@ function advanceCrossfade(
 **Unit tests to add** (`packages/shared/src/selector.test.ts`):
 
 ```ts
-it("holds switch until margin and timer satisfied", () => { /* ... */ });
-it("enters SILENCE when all below threshold", () => { /* ... */ });
-it("advances crossfade t over frames", () => { /* ... */ });
+it("holds switch until margin and timer satisfied", () => {
+  /* ... */
+});
+it("enters SILENCE when all below threshold", () => {
+  /* ... */
+});
+it("advances crossfade t over frames", () => {
+  /* ... */
+});
 ```
 
 ### P3.2 Equal-power crossfade in mixer
@@ -1013,8 +1095,8 @@ export const FRAME_MS = 10;
 // apps/web/src/host/audio/stream-processor.ts
 export interface StreamProcessorConfig {
   targetSpeechDbfs: number; // -20
-  noiseAlpha: number;       // EMA for noise floor
-  vadHangoverMs: number;    // 200
+  noiseAlpha: number; // EMA for noise floor
+  vadHangoverMs: number; // 200
   hostPriority: number;
 }
 
@@ -1065,7 +1147,11 @@ export interface AudioEngineCallbacks {
 export class AudioEngine {
   private processors = new Map<string, StreamProcessor>();
 
-  attachStream(id: string, stream: MediaStream, meta: Pick<StreamMetrics, "name" | "role">): void {
+  attachStream(
+    id: string,
+    stream: MediaStream,
+    meta: Pick<StreamMetrics, "name" | "role">,
+  ): void {
     // MediaStreamSource -> ScriptProcessorNode(480, 1) -> silent destination
     // DECISION: AudioWorklet preferred; ScriptProcessor for MVP with eslint waiver
   }
@@ -1089,7 +1175,10 @@ Replace `createAudioLevelMonitor` + `peerAudioLevels` map with `AudioEngine`:
 
 ```ts
 audioEngine = new AudioEngine(config);
-audioEngine.attachStream(HOST_STREAM_ID, hostStream, { name: "host", role: "host" });
+audioEngine.attachStream(HOST_STREAM_ID, hostStream, {
+  name: "host",
+  role: "host",
+});
 audioEngine.start({
   onMetrics: (streams) => {
     hostMetrics = streams;
@@ -1155,12 +1244,12 @@ Wire limiter between mixer destination and `BridgeClient.attachAudio`.
 
 ## Signaling + broadcast strategy
 
-| Data | Rate | Channel |
-|------|------|---------|
-| Full `StreamMetrics[]` | 20 Hz | host → `metrics` (self) + local UI 100 Hz |
-| `SelectionState` | 20 Hz | host → `selection` |
-| Transport stats (RTT…) | 1 Hz | participants → `metrics` (unchanged) |
-| `RoomState` | on change | server `room-update` |
+| Data                   | Rate      | Channel                                   |
+| ---------------------- | --------- | ----------------------------------------- |
+| Full `StreamMetrics[]` | 20 Hz     | host → `metrics` (self) + local UI 100 Hz |
+| `SelectionState`       | 20 Hz     | host → `selection`                        |
+| Transport stats (RTT…) | 1 Hz      | participants → `metrics` (unchanged)      |
+| `RoomState`            | on change | server `room-update`                      |
 
 **DECISION:** Today every `metrics` message triggers `room-update` to all clients. At 20 Hz × N streams this is heavy. Options:
 
@@ -1171,9 +1260,15 @@ Wire limiter between mixer destination and `BridgeClient.attachAudio`.
 ```ts
 // Option 3 — packages/shared/src/types.ts
 export interface ParticipantRoomView {
-  participants: Pick<ParticipantInfo, "id" | "name" | "hasVideo" | "hasAudio">[];
+  participants: Pick<
+    ParticipantInfo,
+    "id" | "name" | "hasVideo" | "hasAudio"
+  >[];
   selection: SelectionState | null;
-  selfMetric: Pick<StreamMetrics, "rmsDbfs" | "snrDb" | "vad" | "calibrationPhase">;
+  selfMetric: Pick<
+    StreamMetrics,
+    "rmsDbfs" | "snrDb" | "vad" | "calibrationPhase"
+  >;
 }
 ```
 
@@ -1183,19 +1278,19 @@ export interface ParticipantRoomView {
 
 ### Unit
 
-| File | Cases |
-|------|-------|
-| `selector.test.ts` | hysteresis, silence, crossfade advance, host priority |
-| `audio-math.test.ts` | linearToDbfs, equalPowerGains |
-| `stream-processor.test.ts` | noise floor only updates when !vad |
-| `messages.test.ts` | join without seat |
+| File                       | Cases                                                 |
+| -------------------------- | ----------------------------------------------------- |
+| `selector.test.ts`         | hysteresis, silence, crossfade advance, host priority |
+| `audio-math.test.ts`       | linearToDbfs, equalPowerGains                         |
+| `stream-processor.test.ts` | noise floor only updates when !vad                    |
+| `messages.test.ts`         | join without seat                                     |
 
 ### Integration
 
-| File | Cases |
-|------|-------|
-| `room.test.ts` | `hostOnline`, no seatCount |
-| `signaling.integration.test.ts` | join/leave without seat |
+| File                            | Cases                      |
+| ------------------------------- | -------------------------- |
+| `room.test.ts`                  | `hostOnline`, no seatCount |
+| `signaling.integration.test.ts` | join/leave without seat    |
 
 ### E2E
 
@@ -1203,7 +1298,9 @@ export interface ParticipantRoomView {
 // e2e/host.spec.ts — Electron skipped in CI; test host.html auto-start in browser
 test("auto-starts dashboard", async ({ page }) => {
   await page.goto("/host.html");
-  await expect(page.getByText("spidercam / host")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText("spidercam / host")).toBeVisible({
+    timeout: 15_000,
+  });
   await expect(page.locator(".host-header")).toBeVisible();
   // no #startBtn
 });
@@ -1240,23 +1337,23 @@ Build order: `shared` → `server` → `web` → `electron`.
 
 ## Open decisions register
 
-| ID | Question | Status / default |
-|----|----------|------------------|
-| D1 | Host stream id: `"host"` vs UUID | **Resolved:** `HOST_STREAM_ID = "host"` |
-| D2 | Switch margin units | **Resolved:** `switchMargin` normalized (≈1.0), not dB |
-| D3 | Video vs audio coupling | **Resolved:** audio-driven; video stable >100 ms (§3.5) |
-| D4 | `mainTalkerId` during crossfade | **Resolved:** `mainTalkerId` = selected target; mixer crossfades `activeAudioId` |
-| D5 | `cpuPercent` source | Open — Electron IPC |
-| D6 | `globalLatencyMs` | Open — jitter buffer + max RTT; target E2E 80–150 ms |
-| D7 | Host page over LAN | Open — 404 non-loopback |
-| D8 | `config` WS message | **Resolved:** keep for runtime tuning |
-| D9 | ScriptProcessor vs AudioWorklet | Open — Worklet preferred; ScriptProcessor MVP |
-| D10 | Orphan / room speech | **Resolved:** host priority + ducking; no seat proxy |
-| D11 | Signaling at 20 Hz full metrics | Open — throttle or `ParticipantRoomView` |
-| D12 | Pull-based frame graph vs push analyzers | Open — research wants pull; current code is push |
-| D13 | `echoPenalty` without far-end ref | Open — stub 0 in MVP; host AEC in P5 |
-| D14 | Gate/ducking in mixer vs score only | Open — research has both; plan UI shows `gateGainDb` / `duckingGainDb` |
-| D15 | CI Electron vs browser host fallback | Open |
+| ID  | Question                                 | Status / default                                                                 |
+| --- | ---------------------------------------- | -------------------------------------------------------------------------------- |
+| D1  | Host stream id: `"host"` vs UUID         | **Resolved:** `HOST_STREAM_ID = "host"`                                          |
+| D2  | Switch margin units                      | **Resolved:** `switchMargin` normalized (≈1.0), not dB                           |
+| D3  | Video vs audio coupling                  | **Resolved:** audio-driven; video stable >100 ms (§3.5)                          |
+| D4  | `mainTalkerId` during crossfade          | **Resolved:** `mainTalkerId` = selected target; mixer crossfades `activeAudioId` |
+| D5  | `cpuPercent` source                      | Open — Electron IPC                                                              |
+| D6  | `globalLatencyMs`                        | Open — jitter buffer + max RTT; target E2E 80–150 ms                             |
+| D7  | Host page over LAN                       | Open — 404 non-loopback                                                          |
+| D8  | `config` WS message                      | **Resolved:** keep for runtime tuning                                            |
+| D9  | ScriptProcessor vs AudioWorklet          | Open — Worklet preferred; ScriptProcessor MVP                                    |
+| D10 | Orphan / room speech                     | **Resolved:** host priority + ducking; no seat proxy                             |
+| D11 | Signaling at 20 Hz full metrics          | Open — throttle or `ParticipantRoomView`                                         |
+| D12 | Pull-based frame graph vs push analyzers | Open — research wants pull; current code is push                                 |
+| D13 | `echoPenalty` without far-end ref        | Open — stub 0 in MVP; host AEC in P5                                             |
+| D14 | Gate/ducking in mixer vs score only      | Open — research has both; plan UI shows `gateGainDb` / `duckingGainDb`           |
+| D15 | CI Electron vs browser host fallback     | Open                                                                             |
 
 ---
 

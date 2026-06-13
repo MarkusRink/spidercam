@@ -6,12 +6,12 @@ Linux v1: **PipeWire via thin C shim** (D11). Go calls a stable C API; libpipewi
 
 ## Streams
 
-| Stream | ID | Source | Purpose |
-|--------|-----|--------|---------|
-| Host mic | `host` | PW capture source (user-selected) | Host talker in mix |
-| Host camera | `host` (video) | v4l2 device (user-selected) | Host video in composite |
+| Stream                 | ID             | Source                                   | Purpose                  |
+| ---------------------- | -------------- | ---------------------------------------- | ------------------------ |
+| Host mic               | `host`         | PW capture source (user-selected)        | Host talker in mix       |
+| Host camera            | `host` (video) | v4l2 device (user-selected)              | Host video in composite  |
 | **Playback reference** | `playback-ref` | **Monitor of user-selected output sink** | Room loopback correction |
-| Participant A/V | participant id | Pion RTP (not capture package) | Remote laptops |
+| Participant A/V        | participant id | Pion RTP (not capture package)           | Remote laptops           |
 
 ## Playback reference rationale
 
@@ -128,12 +128,12 @@ On first run (no saved selection):
 
 Env overrides for headless/bootstrap only (seed first open; not persisted):
 
-| Variable | Default |
-|----------|---------|
-| `SPIDERCAM_MIC` | PW default source if UI unset |
-| `SPIDERCAM_CAMERA` | first v4l2 |
-| `SPIDERCAM_PLAYBACK_SINK` | PW default sink |
-| `SPIDERCAM_SAMPLE_RATE` | `48000` |
+| Variable                  | Default                       |
+| ------------------------- | ----------------------------- |
+| `SPIDERCAM_MIC`           | PW default source if UI unset |
+| `SPIDERCAM_CAMERA`        | first v4l2                    |
+| `SPIDERCAM_PLAYBACK_SINK` | PW default sink               |
+| `SPIDERCAM_SAMPLE_RATE`   | `48000`                       |
 
 Device selection from the host UI applies for the session only; restart reverts to env/bootstrap defaults until UI sends `set-capture-devices` again.
 

@@ -1,0 +1,14 @@
+{
+  "name": "@spidercam/test-fixtures",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./host-state/routing.json": "./host-state/routing.json",
+    "./capture-devices.json": "./capture-devices.json",
+    "./preview/keyframe.h264": "./preview/keyframe.h264"
+  },
+  "scripts": {
+    "build": "node --eval \"\""
+  }
+}

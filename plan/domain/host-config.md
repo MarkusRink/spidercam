@@ -59,20 +59,20 @@ All controls in the always-visible right column ([ui/host-console.md](../ui/host
 
 ### Devices (WS `set-capture-devices`, not in `HostConfig`)
 
-| UI label | Key | Source |
-|----------|-----|--------|
-| Microphone | `micId` | PipeWire sources (C enum) |
-| Webcam | `cameraId` | v4l2 |
-| Playback output | `sinkId` | PipeWire sinks → monitor for ref |
+| UI label        | Key        | Source                           |
+| --------------- | ---------- | -------------------------------- |
+| Microphone      | `micId`    | PipeWire sources (C enum)        |
+| Webcam          | `cameraId` | v4l2                             |
+| Playback output | `sinkId`   | PipeWire sinks → monitor for ref |
 
 ### Mixer
 
-| UI label | Key | Range |
-|----------|-----|-------|
-| Hold time | `audioHoldMs` | 200–800 |
-| Crossfade | `crossfadeMs` | 50–200 (audio only) |
-| Ducking | `referenceDuckDb` | 0 … −12 dB |
-| Switch margin | `switchMargin` | 0.5–2.0 |
+| UI label      | Key               | Range               |
+| ------------- | ----------------- | ------------------- |
+| Hold time     | `audioHoldMs`     | 200–800             |
+| Crossfade     | `crossfadeMs`     | 50–200 (audio only) |
+| Ducking       | `referenceDuckDb` | 0 … −12 dB          |
+| Switch margin | `switchMargin`    | 0.5–2.0             |
 
 Per-stream **AEC** and **RNNoise** are not in `HostConfig` — toggled on stream cards via `set-stream-processing` ([domain/messages.md](./messages.md)); session RAM only.
 
@@ -82,13 +82,13 @@ Hint under ducking: “Attenuates room mics while remote Teams speech is active.
 
 ### Score weights
 
-| UI label | Key | Range |
-|----------|-----|-------|
-| Level | `scoreWeights.level` | 0–1 |
-| SNR | `scoreWeights.snr` | 0–1 |
-| VAD | `scoreWeights.vad` | 0–1 |
-| Priority | `scoreWeights.priority` | 0–1 |
-| Echo penalty | `scoreWeights.echoPenalty` | 0–1 |
+| UI label     | Key                        | Range |
+| ------------ | -------------------------- | ----- |
+| Level        | `scoreWeights.level`       | 0–1   |
+| SNR          | `scoreWeights.snr`         | 0–1   |
+| VAD          | `scoreWeights.vad`         | 0–1   |
+| Priority     | `scoreWeights.priority`    | 0–1   |
+| Echo penalty | `scoreWeights.echoPenalty` | 0–1   |
 
 No preset buttons.
 

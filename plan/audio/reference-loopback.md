@@ -128,12 +128,12 @@ Many **phases** occur naturally whenever someone remote speaks and room mics pic
 
 Run analysis only when all pass:
 
-| Gate | Reason |
-|------|--------|
-| `reference.active` | Probe signal present |
-| Peak correlation ≥ `LoopDelayMinPeak` | Mic hears room, not noise |
-| Local mic not dominant (double-talk guard) | Correlation meaningful |
-| Optional: `echoPenalty > 0.3` | Cheap pre-filter |
+| Gate                                       | Reason                    |
+| ------------------------------------------ | ------------------------- |
+| `reference.active`                         | Probe signal present      |
+| Peak correlation ≥ `LoopDelayMinPeak`      | Mic hears room, not noise |
+| Local mic not dominant (double-talk guard) | Correlation meaningful    |
+| Optional: `echoPenalty > 0.3`              | Cheap pre-filter          |
 
 ### Estimator
 
@@ -208,10 +208,10 @@ Participant streams only — host mic loop is diagnostic on host strip, not used
 
 ### Separation from echoPenalty
 
-| Output | Lag | Rate | Use |
-|--------|-----|------|-----|
-| `echoPenalty` | 0 (same frame) | 10 ms | Scoring, ducking |
-| `loopDelay` | GCC-PHAT peak τ | ~3 s publish | Latency bar, global max |
+| Output        | Lag             | Rate         | Use                     |
+| ------------- | --------------- | ------------ | ----------------------- |
+| `echoPenalty` | 0 (same frame)  | 10 ms        | Scoring, ducking        |
+| `loopDelay`   | GCC-PHAT peak τ | ~3 s publish | Latency bar, global max |
 
 ## HostConfig additions
 

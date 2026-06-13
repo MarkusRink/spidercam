@@ -4,10 +4,10 @@
 
 Spidercam’s audio problem splits into two classes:
 
-| Class | Symptom | Mitigation |
-|-------|---------|------------|
+| Class                        | Symptom                                                                                         | Mitigation                                                                                                                                             |
+| ---------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **(1) Echo / room loopback** | Far-end Teams speech on TV/speakers re-enters in-room laptop mics; selector may route echo back | `playback-ref` correlation (`echoPenalty`), reference ducking, passive loop delay, **per-stream AEC** — [echo-cancellation.md](./echo-cancellation.md) |
-| **(2) Voice isolation** | Pick intended in-room talker over HVAC, keyboard, reverb, overlapping local speech | Optional per-stream **RNNoise** — [enhancement.md](./enhancement.md) |
+| **(2) Voice isolation**      | Pick intended in-room talker over HVAC, keyboard, reverb, overlapping local speech              | Optional per-stream **RNNoise** — [enhancement.md](./enhancement.md)                                                                                   |
 
 **NS alone does not fix (1).** Neural enhancers treat speech-like TV bleed as speech. Echo-aware methods (correlation, ducking, AEC) are required for false routing.
 
@@ -79,15 +79,15 @@ See [reference-loopback.md](./reference-loopback.md), [echo-cancellation.md](./e
 
 ## Timing
 
-| Constant | Value |
-|----------|-------|
-| Sample rate | 48 kHz |
-| Frame size | 480 samples (10 ms) |
-| Selector tick | 20 ms (50 Hz) |
-| Score EMA α | 0.1 (~200 ms) |
-| Loop delay publish | 3 s (default) |
+| Constant                  | Value                   |
+| ------------------------- | ----------------------- |
+| Sample rate               | 48 kHz                  |
+| Frame size                | 480 samples (10 ms)     |
+| Selector tick             | 20 ms (50 Hz)           |
+| Score EMA α               | 0.1 (~200 ms)           |
+| Loop delay publish        | 3 s (default)           |
 | RNNoise effective latency | ~10–20 ms (overlap-add) |
-| AEC algorithmic delay | ~0–20 ms (APM AEC3) |
+| AEC algorithmic delay     | ~0–20 ms (APM AEC3)     |
 
 **CPU budget:** entire engine tick must finish inside 10 ms with margin. Profile `aecUs` + `denoiseUs` per stream and `enhancementBudgetPct` globally — [enhancement.md](./enhancement.md), [echo-cancellation.md](./echo-cancellation.md).
 
@@ -95,31 +95,31 @@ See [reference-loopback.md](./reference-loopback.md), [echo-cancellation.md](./e
 
 ## Stage ownership
 
-| Stage | Package | Spec |
-|-------|---------|------|
-| Pull clock + fan-in | `audio/engine` | [frame-engine.md](./frame-engine.md) |
+| Stage                    | Package           | Spec                                             |
+| ------------------------ | ----------------- | ------------------------------------------------ |
+| Pull clock + fan-in      | `audio/engine`    | [frame-engine.md](./frame-engine.md)             |
 | Echo / loopback analysis | `audio/reference` | [reference-loopback.md](./reference-loopback.md) |
-| AEC | `audio/aec` | [echo-cancellation.md](./echo-cancellation.md) |
-| Per-stream DSP | `audio/processor` | [stream-processor.md](./stream-processor.md) |
-| Voice isolation | `audio/enhance` | [enhancement.md](./enhancement.md) |
-| Math | `audio/math` | [math.md](./math.md) |
-| Routing | `selector` | [selector.md](./selector.md) |
-| Mix + video | `audio/mixer` | [mixer.md](./mixer.md) |
+| AEC                      | `audio/aec`       | [echo-cancellation.md](./echo-cancellation.md)   |
+| Per-stream DSP           | `audio/processor` | [stream-processor.md](./stream-processor.md)     |
+| Voice isolation          | `audio/enhance`   | [enhancement.md](./enhancement.md)               |
+| Math                     | `audio/math`      | [math.md](./math.md)                             |
+| Routing                  | `selector`        | [selector.md](./selector.md)                     |
+| Mix + video              | `audio/mixer`     | [mixer.md](./mixer.md)                           |
 
 ---
 
 ## Policies
 
-| Policy | Choice |
-|--------|--------|
-| Overlapping speech | Single best talker |
-| Silence output | Near-silence (gated) |
-| Teams / TV bleed (routing) | Raw `echoPenalty` + ref duck |
-| Teams / TV bleed (output) | Per-stream AEC when enabled |
-| Host mic | Same pipeline as participants |
-| Voice isolation | Optional RNNoise per stream; default **off** |
-| AEC | Optional per stream; default **off** |
-| Analysis vs output | Raw tap for scores/echo/delay; enhanced for mixer + card meters |
+| Policy                     | Choice                                                          |
+| -------------------------- | --------------------------------------------------------------- |
+| Overlapping speech         | Single best talker                                              |
+| Silence output             | Near-silence (gated)                                            |
+| Teams / TV bleed (routing) | Raw `echoPenalty` + ref duck                                    |
+| Teams / TV bleed (output)  | Per-stream AEC when enabled                                     |
+| Host mic                   | Same pipeline as participants                                   |
+| Voice isolation            | Optional RNNoise per stream; default **off**                    |
+| AEC                        | Optional per stream; default **off**                            |
+| Analysis vs output         | Raw tap for scores/echo/delay; enhanced for mixer + card meters |
 
 ---
 

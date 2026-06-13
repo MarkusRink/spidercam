@@ -77,14 +77,14 @@ flowchart TB
   HTTP -->|serves| P1
 ```
 
-| Concern | Today | Target |
-|---------|-------|--------|
-| Host shell | Browser at `/host.html` | **Electron** window loads host UI; server starts with app |
-| Availability | "Start host" screen | **Always online** when app runs — no start/end session |
-| Participants | Pick seat 0–7 | **Name + connect** only; dynamic join/disconnect |
-| Routing | Level + seat distance | **Per-stream score** (level, SNR, VAD, host priority) + hysteresis + crossfade |
-| Host page | 2-col + sidebar video cards | **One full-screen console** — output + mixer brain + stream rail + transport footer |
-| Participant page | Connect + session table | **One full-screen confidence monitor** |
+| Concern          | Today                       | Target                                                                              |
+| ---------------- | --------------------------- | ----------------------------------------------------------------------------------- |
+| Host shell       | Browser at `/host.html`     | **Electron** window loads host UI; server starts with app                           |
+| Availability     | "Start host" screen         | **Always online** when app runs — no start/end session                              |
+| Participants     | Pick seat 0–7               | **Name + connect** only; dynamic join/disconnect                                    |
+| Routing          | Level + seat distance       | **Per-stream score** (level, SNR, VAD, host priority) + hysteresis + crossfade      |
+| Host page        | 2-col + sidebar video cards | **One full-screen console** — output + mixer brain + stream rail + transport footer |
+| Participant page | Connect + session table     | **One full-screen confidence monitor**                                              |
 
 **New workspace:** `apps/electron` — thin shell (`main.ts`, `preload.ts`) that spawns [`apps/server`](apps/server), opens host UI (file:// or bundled Vite dist), exposes optional tray menu (quit, open participant URL, copy LAN link). Host dashboard is **removed from public web** (or redirected); only participants are served at `/`.
 
@@ -108,24 +108,35 @@ interface StreamMetrics {
   // levels
   rmsDbfs: number;
   peakDbfs: number;
-  speechLevelDbfs: number;      // long-term, VAD-gated
+  speechLevelDbfs: number; // long-term, VAD-gated
   noiseFloorDbfs: number;
   snrDb: number;
   // routing
   vad: boolean;
   vadHangoverMs: number;
-  score: number;                // S_i smoothed
-  scoreComponents: { level: number; snr: number; vad: number; priority: number; echoPenalty: number };
+  score: number; // S_i smoothed
+  scoreComponents: {
+    level: number;
+    snr: number;
+    vad: number;
+    priority: number;
+    echoPenalty: number;
+  };
   rank: number;
   gateGainDb: number;
   duckingGainDb: number;
-  calibrationGain: number;      // g_cal_smooth
+  calibrationGain: number; // g_cal_smooth
   calibrationPhase: "idle" | "measuring" | "applying" | "done";
   jitterBufferFrames: number;
   delayOffsetMs: number;
   isMainTalker: boolean;
   // transport (existing)
-  rttMs, packetLoss, jitterMs, bitrateKbps, framesPerSecond, lastUpdated
+  rttMs;
+  packetLoss;
+  jitterMs;
+  bitrateKbps;
+  framesPerSecond;
+  lastUpdated;
 }
 ```
 
@@ -177,18 +188,18 @@ Design principle: **every pixel shows mixer state**, not decoration. Preserve [`
 
 ### Use cases
 
-| ID | Actor | Goal | Success |
-|----|-------|------|---------|
-| UC-H1 | Host | Start Spidercam and be immediately reachable | Electron opens; bridge connects; LAN URL copyable; no config screen |
-| UC-H2 | Host | See what Teams receives | Output preview shows virtual cam feed + OUT level |
-| UC-H3 | Host | Understand who is routed and why | Main talker, score, hysteresis state, crossfade visible |
-| UC-H4 | Host | Monitor each mic channel health | Per-stream rail: level, VAD, SNR, score, transport |
-| UC-H5 | Host | Diagnose problems | Debug drawer: score breakdown, switch log, selector reason |
-| UC-H6 | Host | Tune routing aggressiveness | Adjust hold time, crossfade, host-priority (settings, not session) |
-| UC-P1 | Participant | Join quickly | Name + server URL + device toggles; no seat |
-| UC-P2 | Participant | Confirm mic works | Live level meter + dBFS/SNR |
-| UC-P3 | Participant | Know if on-air | "On air: Alice" vs "Not routed" |
-| UC-P4 | Participant | Leave cleanly | Disconnect stops tracks and WS |
+| ID    | Actor       | Goal                                         | Success                                                             |
+| ----- | ----------- | -------------------------------------------- | ------------------------------------------------------------------- |
+| UC-H1 | Host        | Start Spidercam and be immediately reachable | Electron opens; bridge connects; LAN URL copyable; no config screen |
+| UC-H2 | Host        | See what Teams receives                      | Output preview shows virtual cam feed + OUT level                   |
+| UC-H3 | Host        | Understand who is routed and why             | Main talker, score, hysteresis state, crossfade visible             |
+| UC-H4 | Host        | Monitor each mic channel health              | Per-stream rail: level, VAD, SNR, score, transport                  |
+| UC-H5 | Host        | Diagnose problems                            | Debug drawer: score breakdown, switch log, selector reason          |
+| UC-H6 | Host        | Tune routing aggressiveness                  | Adjust hold time, crossfade, host-priority (settings, not session)  |
+| UC-P1 | Participant | Join quickly                                 | Name + server URL + device toggles; no seat                         |
+| UC-P2 | Participant | Confirm mic works                            | Live level meter + dBFS/SNR                                         |
+| UC-P3 | Participant | Know if on-air                               | "On air: Alice" vs "Not routed"                                     |
+| UC-P4 | Participant | Leave cleanly                                | Disconnect stops tracks and WS                                      |
 
 ### Host page — layout (1080p, no page scroll)
 
@@ -242,16 +253,16 @@ Desktop: centered `max-width: 420px`. No routing math on participant view.
 
 ### Host page (Electron)
 
-| Action | Trigger | Effect |
-|--------|---------|--------|
-| **Launch app** | OS start / tray | Server starts, host mic/cam captured, auto-join as `host-mixer`, dashboard shown |
-| **Copy participant URL** | Header button / tray | Clipboard `http://<lan-ip>:9847/` |
-| **Open settings** | Gear icon | Panel overlay: crossfade ms, hold ms, host-priority boost, NS level, score weight presets |
-| **Apply settings** | Settings save | Updates `HostConfig`; no restart |
-| **Inspect stream** | Click stream strip | Expands strip (P2): sparklines, score breakdown, delay/buffer |
-| **Collapse stream** | Click again / Esc | Returns to compact strip |
-| **Toggle debug drawer** | Footer `debug` | Score components table, switch log, raw JSON copy |
-| **Quit** | Window close / tray quit | Stops bridge, releases devices, stops server |
+| Action                   | Trigger                  | Effect                                                                                    |
+| ------------------------ | ------------------------ | ----------------------------------------------------------------------------------------- |
+| **Launch app**           | OS start / tray          | Server starts, host mic/cam captured, auto-join as `host-mixer`, dashboard shown          |
+| **Copy participant URL** | Header button / tray     | Clipboard `http://<lan-ip>:9847/`                                                         |
+| **Open settings**        | Gear icon                | Panel overlay: crossfade ms, hold ms, host-priority boost, NS level, score weight presets |
+| **Apply settings**       | Settings save            | Updates `HostConfig`; no restart                                                          |
+| **Inspect stream**       | Click stream strip       | Expands strip (P2): sparklines, score breakdown, delay/buffer                             |
+| **Collapse stream**      | Click again / Esc        | Returns to compact strip                                                                  |
+| **Toggle debug drawer**  | Footer `debug`           | Score components table, switch log, raw JSON copy                                         |
+| **Quit**                 | Window close / tray quit | Stops bridge, releases devices, stops server                                              |
 
 **Removed actions:** "Start host", seat count, host seat, end session.
 
@@ -259,15 +270,15 @@ Desktop: centered `max-width: 420px`. No routing math on participant view.
 
 ### Participant page (web)
 
-| Action | Trigger | Effect |
-|--------|---------|--------|
-| **Enter display name** | Text input | Sent on join |
-| **Edit server URL** | Text input | WS/WebRTC target (default: current host) |
-| **Toggle webcam** | Checkbox | `getUserMedia` video on/off before connect |
-| **Toggle microphone** | Checkbox | `getUserMedia` audio on/off before connect |
-| **Connect** | Primary button | `join` without seat; WebRTC to host |
-| **Disconnect** | Danger button | `leave`, stop tracks, return to connect screen |
-| **Grant/deny permissions** | Browser prompt | Standard media permission flow |
+| Action                     | Trigger        | Effect                                         |
+| -------------------------- | -------------- | ---------------------------------------------- |
+| **Enter display name**     | Text input     | Sent on join                                   |
+| **Edit server URL**        | Text input     | WS/WebRTC target (default: current host)       |
+| **Toggle webcam**          | Checkbox       | `getUserMedia` video on/off before connect     |
+| **Toggle microphone**      | Checkbox       | `getUserMedia` audio on/off before connect     |
+| **Connect**                | Primary button | `join` without seat; WebRTC to host            |
+| **Disconnect**             | Danger button  | `leave`, stop tracks, return to connect screen |
+| **Grant/deny permissions** | Browser prompt | Standard media permission flow                 |
 
 **Removed actions:** Seat picker.
 
@@ -275,18 +286,18 @@ Desktop: centered `max-width: 420px`. No routing math on participant view.
 
 ## Implementation map
 
-| Area | Key files |
-|------|-----------|
-| Electron shell | **new** `apps/electron/` |
-| Remove seats | `types.ts`, `messages.ts`, `selector.ts`, `room.ts`, `participant.ts`, `dashboard.ts`, tests, `README.md` |
-| Always-on host | `dashboard.ts` — delete `renderStart()`, auto `startHost()` on load |
-| Host UI redesign | `dashboard.ts`, `global.css` — new grid zones, incremental DOM updates (stop full `innerHTML` re-render) |
-| Participant UI | `participant.ts` — remove seat, add on-air/VAD/SNR |
-| Metrics pipeline | **new** `apps/web/src/host/audio-engine.ts`, `stream-processor.ts`; extend `stats.ts` |
-| Mixer crossfade | `mixer.ts` |
-| Selector rewrite | `selector.ts` + tests |
-| Bridge | unchanged path; consumes improved PCM from engine |
-| Root scripts | `package.json` — `npm start` launches Electron; server still `apps/server` |
+| Area             | Key files                                                                                                 |
+| ---------------- | --------------------------------------------------------------------------------------------------------- |
+| Electron shell   | **new** `apps/electron/`                                                                                  |
+| Remove seats     | `types.ts`, `messages.ts`, `selector.ts`, `room.ts`, `participant.ts`, `dashboard.ts`, tests, `README.md` |
+| Always-on host   | `dashboard.ts` — delete `renderStart()`, auto `startHost()` on load                                       |
+| Host UI redesign | `dashboard.ts`, `global.css` — new grid zones, incremental DOM updates (stop full `innerHTML` re-render)  |
+| Participant UI   | `participant.ts` — remove seat, add on-air/VAD/SNR                                                        |
+| Metrics pipeline | **new** `apps/web/src/host/audio-engine.ts`, `stream-processor.ts`; extend `stats.ts`                     |
+| Mixer crossfade  | `mixer.ts`                                                                                                |
+| Selector rewrite | `selector.ts` + tests                                                                                     |
+| Bridge           | unchanged path; consumes improved PCM from engine                                                         |
+| Root scripts     | `package.json` — `npm start` launches Electron; server still `apps/server`                                |
 
 ---
 

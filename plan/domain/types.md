@@ -190,23 +190,23 @@ type SelfMetric struct {
 
 ## Semantics
 
-| Field | Meaning |
-|-------|---------|
-| `reference` | Playback loopback from host speakers — not routed to output |
-| `echoPenalty` | 0–1 correlation with reference at lag 0; reduces false talker detection |
-| `loopDelay` | Passive GCC-PHAT room-loop estimate; `ms` null when `known: false` |
-| `globalLatencyMs` | Max participant `loopDelay.ms` where known; JSON `null` → UI `—` |
-| `outLevelDbfs` / `outPeakDbfs` | Master mix RMS / peak for preview OUT meter |
-| `capture` | Active mic, camera, playback sink labels (host settings) |
-| `playback-ref` | REF vertical meter in preview panel; excluded from selector and global latency |
-| `ParticipantInfo.id` | Stable UUID per WS session (`welcome.clientId`); routing key |
-| `ParticipantInfo.name` | Display name from `join.name`; cosmetic; default client-side `client-{random}` |
-| `mainTalkerId` | Selected talker; participant **On air:** label (`you` / name / `host`) |
-| `activeAudioId` | Stream routed to Teams; participant **header red dot** when equals self |
-| `rmsDbfs` / `peakDbfs` on metrics | Post-enhancement levels (what Teams hears) |
-| `aecEnabled` / `denoiseEnabled` | Per-stream processing toggles; default false |
-| `aecUs` / `denoiseUs` | EMA process time per frame; 0 when disabled |
-| `enhancementBudgetPct` | (Σ aecUs + Σ denoiseUs) / 10 ms × 100; header when any processing on |
+| Field                             | Meaning                                                                        |
+| --------------------------------- | ------------------------------------------------------------------------------ |
+| `reference`                       | Playback loopback from host speakers — not routed to output                    |
+| `echoPenalty`                     | 0–1 correlation with reference at lag 0; reduces false talker detection        |
+| `loopDelay`                       | Passive GCC-PHAT room-loop estimate; `ms` null when `known: false`             |
+| `globalLatencyMs`                 | Max participant `loopDelay.ms` where known; JSON `null` → UI `—`               |
+| `outLevelDbfs` / `outPeakDbfs`    | Master mix RMS / peak for preview OUT meter                                    |
+| `capture`                         | Active mic, camera, playback sink labels (host settings)                       |
+| `playback-ref`                    | REF vertical meter in preview panel; excluded from selector and global latency |
+| `ParticipantInfo.id`              | Stable UUID per WS session (`welcome.clientId`); routing key                   |
+| `ParticipantInfo.name`            | Display name from `join.name`; cosmetic; default client-side `client-{random}` |
+| `mainTalkerId`                    | Selected talker; participant **On air:** label (`you` / name / `host`)         |
+| `activeAudioId`                   | Stream routed to Teams; participant **header red dot** when equals self        |
+| `rmsDbfs` / `peakDbfs` on metrics | Post-enhancement levels (what Teams hears)                                     |
+| `aecEnabled` / `denoiseEnabled`   | Per-stream processing toggles; default false                                   |
+| `aecUs` / `denoiseUs`             | EMA process time per frame; 0 when disabled                                    |
+| `enhancementBudgetPct`            | (Σ aecUs + Σ denoiseUs) / 10 ms × 100; header when any processing on           |
 
 ## TypeScript
 

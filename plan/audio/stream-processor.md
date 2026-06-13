@@ -100,12 +100,12 @@ func (p *Pipeline) SetProcessing(flags protocol.StreamProcessingFlags) error {
 
 ## Metric sources
 
-| Field | Branch |
-|-------|--------|
-| `score`, `vad`, `snrDb`, `noiseFloorDbfs`, `scoreComponents` | Raw |
-| `rmsDbfs`, `peakDbfs` (card meter) | Post-enhancement |
-| `echoPenalty` | Computed on raw (in engine, from reference processor) |
-| `aecEnabled`, `denoiseEnabled`, `aecUs`, `denoiseUs` | Enhancement state |
+| Field                                                        | Branch                                                |
+| ------------------------------------------------------------ | ----------------------------------------------------- |
+| `score`, `vad`, `snrDb`, `noiseFloorDbfs`, `scoreComponents` | Raw                                                   |
+| `rmsDbfs`, `peakDbfs` (card meter)                           | Post-enhancement                                      |
+| `echoPenalty`                                                | Computed on raw (in engine, from reference processor) |
+| `aecEnabled`, `denoiseEnabled`, `aecUs`, `denoiseUs`         | Enhancement state                                     |
 
 ## Echo penalty
 

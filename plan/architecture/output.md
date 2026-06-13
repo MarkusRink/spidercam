@@ -38,10 +38,10 @@ func Open(ctx context.Context, cfg Config) (Writer, error)
 
 ## Environment
 
-| Variable | Default |
-|----------|---------|
-| `SPIDERCAM_VIDEO_DEVICE` | `/dev/video2` |
-| `SPIDERCAM_AUDIO_SINK` | `spidercam_sink` |
+| Variable                 | Default          |
+| ------------------------ | ---------------- |
+| `SPIDERCAM_VIDEO_DEVICE` | `/dev/video2`    |
+| `SPIDERCAM_AUDIO_SINK`   | `spidercam_sink` |
 
 ## Health
 

@@ -1,0 +1,8 @@
+@import "tailwindcss";
+@import "@spidercam/ui-theme/spidercam.css";
+
+@layer base {
+  body {
+    @apply bg-(--color-spider-bg) text-(--color-spider-text) font-sans antialiased;
+  }
+}

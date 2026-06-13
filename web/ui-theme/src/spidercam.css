@@ -1,0 +1,22 @@
+@theme {
+  --color-spider-bg: #0a0a0b;
+  --color-spider-surface: #111113;
+  --color-spider-border: #2a2a2e;
+  --color-spider-text: #e8e8ea;
+  --color-spider-muted: #6b6b70;
+  --color-spider-accent: #3dd68c;
+  --color-spider-hold: #2dd4bf;
+  --color-spider-warn: #f5a623;
+  --color-spider-error: #ff5f57;
+  --color-spider-meter-track: #1a1a1e;
+
+  --font-mono:
+    "JetBrains Mono", "SF Mono", "Fira Code", ui-monospace, monospace;
+  --font-sans: system-ui, -apple-system, sans-serif;
+
+  --radius-spider: 3px;
+  --radius-spider-sm: 2px;
+
+  --stream-card-w: 168px;
+  --stream-card-h: 240px;
+}

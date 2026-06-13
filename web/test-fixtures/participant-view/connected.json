@@ -1,0 +1,39 @@
+{
+  "type": "participant-view",
+  "view": {
+    "participants": [
+      {
+        "id": "a3f7c2e1-0000-4000-8000-000000000001",
+        "name": "Alice",
+        "hasVideo": true,
+        "hasAudio": true,
+        "joinedAt": 1718280000000
+      },
+      {
+        "id": "b4e8d3f2-0000-4000-8000-000000000002",
+        "name": "Bob",
+        "hasVideo": true,
+        "hasAudio": true,
+        "joinedAt": 1718280010000
+      }
+    ],
+    "selection": {
+      "activeVideoId": "a3f7c2e1-0000-4000-8000-000000000001",
+      "activeAudioId": "a3f7c2e1-0000-4000-8000-000000000001",
+      "mainTalkerId": "a3f7c2e1-0000-4000-8000-000000000001",
+      "mixerState": "LOCKED",
+      "holdRemainingMs": 0,
+      "crossfade": null,
+      "switchEvents": [],
+      "reason": "locked",
+      "timestamp": 1718280021000
+    },
+    "selfMetric": {
+      "rmsDbfs": -22.5,
+      "snrDb": 22.0,
+      "vad": true,
+      "calibrationPhase": "tracking",
+      "loopDelay": { "ms": 118, "uncertaintyMs": 12.5, "known": true }
+    }
+  }
+}

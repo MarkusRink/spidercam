@@ -1,0 +1,32 @@
+{
+  "name": "spidercam",
+  "private": true,
+  "workspaces": [
+    "apps/mock-server",
+    "web/protocol",
+    "web/test-fixtures",
+    "web/ui-theme",
+    "web/host",
+    "web/participant"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run lint && npm run format:check && npm run build",
+    "dev": "concurrently -n mock,host,participant -c blue,green,magenta \"npm -w @spidercam/mock-server run dev\" \"npm -w @spidercam/host run dev\" \"npm -w @spidercam/participant run dev\"",
+    "test:ui": "playwright test -c e2e/playwright.config.ts",
+    "test:unit": "npm run test --workspaces --if-present"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.52.0",
+    "@types/node": "^25.9.3",
+    "concurrently": "^10.0.3",
+    "eslint": "^10.5.0",
+    "prettier": "^3.5.3",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.61.0"
+  }
+}

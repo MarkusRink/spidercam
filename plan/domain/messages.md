@@ -111,21 +111,21 @@ Full route table: [API.md](../API.md).
 
 ## WebSocket message rates
 
-| Message | Port | Path | Direction | Rate |
-|---------|------|------|-----------|------|
-| `host-state` | 1235 | `/api/v1/ws` | → host UI | 50 Hz |
-| `preview-stream-init` | 1235 | `/api/v1/ws/preview` | → host UI | once per connect |
-| `preview-cut` | 1235 | `/api/v1/ws/preview` | → host UI | on `activeVideoId` change |
-| preview H.264 binary | 1235 | `/api/v1/ws/preview` | → host UI | 15 fps |
-| `config` | 1235 | `/api/v1/ws` or REST | ← host UI | on change |
-| `set-stream-processing` | 1235 | `/api/v1/ws` or REST | ← host UI | per-card toggle |
-| `list-capture-devices` | 1235 | `/api/v1/ws` | ← host UI | settings open |
-| `capture-devices` | 1235 | `/api/v1/ws` or REST | → host UI | response |
-| `set-capture-devices` | 1235 | `/api/v1/ws` or REST | ← host UI | device save |
-| `capture-devices-updated` | 1235 | `/api/v1/ws` | → host UI | after reopen |
-| `copy-participant-url` | 1235 | `/api/v1/ws` | ← host UI | on click → `participant-url` |
-| `participant-view` | 1234 | `/api/v1/ws` | → participant | on change, max 10 Hz |
-| `offer/answer/ice` | 1234 | `/api/v1/ws` | ↔ participant | on demand |
+| Message                   | Port | Path                 | Direction     | Rate                         |
+| ------------------------- | ---- | -------------------- | ------------- | ---------------------------- |
+| `host-state`              | 1235 | `/api/v1/ws`         | → host UI     | 50 Hz                        |
+| `preview-stream-init`     | 1235 | `/api/v1/ws/preview` | → host UI     | once per connect             |
+| `preview-cut`             | 1235 | `/api/v1/ws/preview` | → host UI     | on `activeVideoId` change    |
+| preview H.264 binary      | 1235 | `/api/v1/ws/preview` | → host UI     | 15 fps                       |
+| `config`                  | 1235 | `/api/v1/ws` or REST | ← host UI     | on change                    |
+| `set-stream-processing`   | 1235 | `/api/v1/ws` or REST | ← host UI     | per-card toggle              |
+| `list-capture-devices`    | 1235 | `/api/v1/ws`         | ← host UI     | settings open                |
+| `capture-devices`         | 1235 | `/api/v1/ws` or REST | → host UI     | response                     |
+| `set-capture-devices`     | 1235 | `/api/v1/ws` or REST | ← host UI     | device save                  |
+| `capture-devices-updated` | 1235 | `/api/v1/ws`         | → host UI     | after reopen                 |
+| `copy-participant-url`    | 1235 | `/api/v1/ws`         | ← host UI     | on click → `participant-url` |
+| `participant-view`        | 1234 | `/api/v1/ws`         | → participant | on change, max 10 Hz         |
+| `offer/answer/ice`        | 1234 | `/api/v1/ws`         | ↔ participant | on demand                    |
 
 Host UI **never** sends `metrics` or `selection` — daemon owns the engine.
 

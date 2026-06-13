@@ -38,7 +38,9 @@ export class HostSignaling {
     this.ws = new WebSocket(`ws://${location.host}/api/v1/ws`);
   }
 
-  onState(handler: (state: RoomState) => void): void { /* host-state */ }
+  onState(handler: (state: RoomState) => void): void {
+    /* host-state */
+  }
 
   sendConfig(partial: Partial<HostConfig>): void {
     this.ws.send(JSON.stringify({ type: "config", config: partial }));
@@ -49,15 +51,22 @@ export class HostSignaling {
   }
 
   setCaptureDevices(sel: CaptureSelection): void {
-    this.ws.send(JSON.stringify({ type: "set-capture-devices", selection: sel }));
+    this.ws.send(
+      JSON.stringify({ type: "set-capture-devices", selection: sel }),
+    );
   }
 
-  setStreamProcessing(participantId: string, flags: StreamProcessingFlags): void {
-    this.ws.send(JSON.stringify({
-      type: "set-stream-processing",
-      participantId,
-      flags,
-    }));
+  setStreamProcessing(
+    participantId: string,
+    flags: StreamProcessingFlags,
+  ): void {
+    this.ws.send(
+      JSON.stringify({
+        type: "set-stream-processing",
+        participantId,
+        flags,
+      }),
+    );
   }
 }
 ```
@@ -95,19 +104,19 @@ Right column is **SettingsPanel** (always visible). No transport footer, no debu
 
 Two WebSockets on mount:
 
-| Socket | Path | Content |
-|--------|------|---------|
-| Control | `/api/v1/ws` | `host-state` @ 50 Hz — meters, timeline, cards |
-| Preview | `/api/v1/ws/preview` | H.264 @ 15 fps — WebCodecs → `<canvas>` |
+| Socket  | Path                 | Content                                        |
+| ------- | -------------------- | ---------------------------------------------- |
+| Control | `/api/v1/ws`         | `host-state` @ 50 Hz — meters, timeline, cards |
+| Preview | `/api/v1/ws/preview` | H.264 @ 15 fps — WebCodecs → `<canvas>`        |
 
 `PreviewStream` ([architecture/preview.md](../architecture/preview.md)) decodes binary chunks; on `preview-cut` clears canvas until next keyframe. Video is **hard-cut** in the daemon compositor (IDR forced on `activeVideoId` change).
 
 Beside the preview canvas:
 
-| Meter | Source | Label |
-|-------|--------|-------|
-| OUT | `outLevelDbfs`, `outPeakDbfs` | Teams virtual mic level |
-| REF | `reference.rmsDbfs`, `reference.peakDbfs` | Playback reference |
+| Meter | Source                                    | Label                   |
+| ----- | ----------------------------------------- | ----------------------- |
+| OUT   | `outLevelDbfs`, `outPeakDbfs`             | Teams virtual mic level |
+| REF   | `reference.rmsDbfs`, `reference.peakDbfs` | Playback reference      |
 
 Both use **VerticalVuMeter** with numeric dBFS below. Clip LED at top when peak ≥ −1 dBFS.
 
@@ -129,11 +138,11 @@ Always visible in right column. Changes apply immediately via WS; **session RAM 
 
 ### Devices
 
-| Control | Binds to | Note |
-|---------|----------|------|
-| Microphone | `CaptureSelection.micId` | PW sources |
-| Webcam | `CaptureSelection.cameraId` | v4l2 paths |
-| Playback output | `CaptureSelection.sinkId` | PW sinks — Teams speaker; drives REF capture |
+| Control         | Binds to                    | Note                                         |
+| --------------- | --------------------------- | -------------------------------------------- |
+| Microphone      | `CaptureSelection.micId`    | PW sources                                   |
+| Webcam          | `CaptureSelection.cameraId` | v4l2 paths                                   |
+| Playback output | `CaptureSelection.sinkId`   | PW sinks — Teams speaker; drives REF capture |
 
 On change: `setCaptureDevices()` → daemon `capture.Reopen`.
 
@@ -141,24 +150,24 @@ Hint under speaker: “Teams meeting audio should play to this device.”
 
 ### Mixer
 
-| Control | Key | Range |
-|---------|-----|-------|
-| Hold time | `audioHoldMs` | 200–800 ms |
-| Crossfade | `crossfadeMs` | 50–200 ms (audio only) |
-| Ducking | `referenceDuckDb` | 0 … −12 dB (`0` = off) |
-| Switch margin | `switchMargin` | 0.5–2.0 |
+| Control       | Key               | Range                  |
+| ------------- | ----------------- | ---------------------- |
+| Hold time     | `audioHoldMs`     | 200–800 ms             |
+| Crossfade     | `crossfadeMs`     | 50–200 ms (audio only) |
+| Ducking       | `referenceDuckDb` | 0 … −12 dB (`0` = off) |
+| Switch margin | `switchMargin`    | 0.5–2.0                |
 
 AEC and RNNoise are **per-stream** on cards — not in this panel.
 
 ### Score weights
 
-| Control | Key | Range |
-|---------|-----|-------|
-| Level | `scoreWeights.level` | 0–1 |
-| SNR | `scoreWeights.snr` | 0–1 |
-| VAD | `scoreWeights.vad` | 0–1 |
-| Priority | `scoreWeights.priority` | 0–1 |
-| Echo penalty | `scoreWeights.echoPenalty` | 0–1 |
+| Control      | Key                        | Range |
+| ------------ | -------------------------- | ----- |
+| Level        | `scoreWeights.level`       | 0–1   |
+| SNR          | `scoreWeights.snr`         | 0–1   |
+| VAD          | `scoreWeights.vad`         | 0–1   |
+| Priority     | `scoreWeights.priority`    | 0–1   |
+| Echo penalty | `scoreWeights.echoPenalty` | 0–1   |
 
 Sliders debounced ~150 ms → `sendConfig(partial)`.
 
@@ -182,14 +191,14 @@ Fixed-layout grid of **StreamCard** components. Order: **host** first, then part
 
 All cards use the same template — no expand/collapse.
 
-| Zone | Content |
-|------|---------|
-| Header row | **On-air dot** (red when `activeAudioId === participantId`) + truncated **name** |
-| Meter | **VerticalVuMeter** (compact) + RMS dBFS |
-| Loop | **LoopDelayText** — `~118 ms` or `—` (no uncertainty) |
-| Processing | **AEC** / **NS** toggles + timing lines when on (`AEC · 0.4ms`, `NS · 0.2ms`) |
-| Transport | **TransportBlock** 2×3 grid (see below) |
-| Chrome | Border opacity ∝ `scoreSmooth` (0.15…1.0) — activity/energy, independent of on-air dot |
+| Zone       | Content                                                                                |
+| ---------- | -------------------------------------------------------------------------------------- |
+| Header row | **On-air dot** (red when `activeAudioId === participantId`) + truncated **name**       |
+| Meter      | **VerticalVuMeter** (compact) + RMS dBFS                                               |
+| Loop       | **LoopDelayText** — `~118 ms` or `—` (no uncertainty)                                  |
+| Processing | **AEC** / **NS** toggles + timing lines when on (`AEC · 0.4ms`, `NS · 0.2ms`)          |
+| Transport  | **TransportBlock** 2×3 grid (see below)                                                |
+| Chrome     | Border opacity ∝ `scoreSmooth` (0.15…1.0) — activity/energy, independent of on-air dot |
 
 Typography: **mono only** inside the card (`font-mono`, `tabular-nums`).
 
@@ -197,10 +206,10 @@ Typography: **mono only** inside the card (`font-mono`, `tabular-nums`).
 
 Small labeled toggles on each card (host + participants):
 
-| Toggle | WS field | Default |
-|--------|----------|---------|
-| AEC | `flags.aecEnabled` | off |
-| NS | `flags.denoiseEnabled` | off |
+| Toggle | WS field               | Default |
+| ------ | ---------------------- | ------- |
+| AEC    | `flags.aecEnabled`     | off     |
+| NS     | `flags.denoiseEnabled` | off     |
 
 On change: `setStreamProcessing(participantId, flags)`. Card meters (`rmsDbfs`) show **post-enhancement** level.
 
@@ -208,10 +217,10 @@ When enabled, show EMA timing below toggles from `aecUs` / `denoiseUs`. When off
 
 ### TransportBlock — participant
 
-| | | |
-|---|---|---|
+|       |        |          |
+| ----- | ------ | -------- |
 | `rtt` | `loss` | `jitter` |
-| `buf` | `fps` | `A/V` |
+| `buf` | `fps`  | `A/V`    |
 
 Formats: `42ms`, `0.2%`, `8ms`, `3`, `29fps`, `AV` / `A-` / `-V` / `--`.
 
@@ -223,9 +232,9 @@ Updates @ **1 Hz** (Pion transport stats).
 
 Same 2×3 cell layout; WebRTC fields not applicable:
 
-| | | |
-|---|---|---|
-| `—` | `—` | `—` |
+|     |       |       |
+| --- | ----- | ----- |
+| `—` | `—`   | `—`   |
 | `—` | `fps` | `A/V` |
 
 `fps` from v4l2 when available; `A/V` from `audioActive` / `videoActive`.
@@ -237,4 +246,3 @@ Loop delay text updates on passive-loop publish cadence (~3 s), not with 50 Hz m
 ## Diagnosis without debug drawer
 
 Routing history: **45 s state timeline** only. Per-stream health: **cards** (meter, transport, loop text, score border). Deep logs: **daemon terminal** — no in-UI JSON drawer (D15).
-

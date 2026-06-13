@@ -1,0 +1,24 @@
+{
+  "name": "@spidercam/mock-server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "prebuild": "npm run build -w @spidercam/protocol",
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@spidercam/protocol": "*",
+    "@spidercam/test-fixtures": "*",
+    "ws": "^8.18.2"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.3",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.19.4"
+  }
+}
