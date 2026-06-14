@@ -12,6 +12,10 @@ test.describe("host console", () => {
     await gotoHost(page);
     await expect(page.getByRole("button", { name: "copy URL" })).toBeVisible();
     await expect(page.getByText(/\d+ streams/)).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Participants" }),
+    ).not.toBeVisible();
+    await expect(page.getByRole("heading", { name: "Devices" })).toBeVisible();
   });
 
   test("UC-H3: shows OUT/REF meters, timeline, and on-air dot", async ({
@@ -115,6 +119,11 @@ test.describe("host console", () => {
     await gotoHost(page);
     await expect(page.getByRole("button", { name: "copy URL" })).toBeVisible();
     await expect(page.getByText("OUT", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Devices" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Mixer" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Participants" }),
+    ).toBeVisible();
     await expect(streamCard(page, "Alice")).toBeVisible();
 
     const overflow = await page.evaluate(
