@@ -213,7 +213,7 @@ npx playwright test --ui -c e2e/playwright.config.ts
 | `web/protocol/` | Shared TypeScript protocol types |
 | `apps/mock-server/` | Node mock API for UI development and tests |
 | `experiments/wave5/` | Validated native I/O spikes (PipeWire, v4l2, x264) |
-| `plan/` | Architecture, API, and implementation specs |
+| `docs/` | Architecture, API, use cases, decisions, glossary |
 | `test/e2e/` | Go integration tests against mock daemon |
 | `e2e/` | Playwright browser tests |
 
@@ -253,7 +253,7 @@ flowchart LR
   Mix --> Prev
 ```
 
-Full specs: [plan/ARCHITECTURE.md](plan/ARCHITECTURE.md), [plan/API.md](plan/API.md), [plan/USE_CASE.md](plan/USE_CASE.md).
+Full specs: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/API.md](docs/API.md), [docs/USE_CASE.md](docs/USE_CASE.md).
 
 ### Code quality
 
@@ -270,6 +270,6 @@ CI runs on every push and PR: Go vet, unit tests (with native capture tag), E2E 
 | Document | Contents |
 | -------- | -------- |
 | [web/README.md](web/README.md) | UI dev stack, two-browser testing, Playwright |
-| [plan/README.md](plan/README.md) | Full planning index |
+| [docs/DECISIONS.md](docs/DECISIONS.md) | Resolved architecture decisions |
+| [docs/GLOSSAR.md](docs/GLOSSAR.md) | Term definitions |
 | [experiments/README.md](experiments/README.md) | Wave 5 native I/O proof results |
-| [plan/BACKEND.md](plan/BACKEND.md) | Backend implementation waves and status |

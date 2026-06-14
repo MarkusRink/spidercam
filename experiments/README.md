@@ -22,7 +22,7 @@ Each experiment lives under `experiments/waveN/` with its own `README.md` (purpo
 
 Wave 5 index: [wave5/README.md](wave5/README.md).
 
-Decisions: [plan/DECISIONS.md](../plan/DECISIONS.md) (D21–D29).
+Decisions: [docs/DECISIONS.md](../docs/DECISIONS.md) (D21–D30).
 
 ### Production artifacts
 

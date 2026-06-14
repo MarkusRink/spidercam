@@ -2,7 +2,7 @@
 
 Mini proof: 3s mono float32 440Hz sine @ 48kHz into virtual mic sink `spidercam_sink`.
 
-Decision D24 option A in [plan/DECISIONS.md](../../../plan/DECISIONS.md) names `github.com/jfreymuth/pulseaudio`; that module does not exist. This proof uses **`github.com/jfreymuth/pulse`** (pure Go, no CGO), which is the maintained PulseAudio client.
+Decision D22 in [docs/DECISIONS.md](../../../docs/DECISIONS.md) names `github.com/jfreymuth/pulseaudio`; that module does not exist. This proof uses **`github.com/jfreymuth/pulse`** (pure Go, no CGO), which is the maintained PulseAudio client.
 
 ## Prerequisites
 

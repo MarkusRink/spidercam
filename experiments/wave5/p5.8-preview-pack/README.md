@@ -1,6 +1,6 @@
 # P5.8 — Preview WS binary framing
 
-Proof that `internal/preview` `PackChunk` and `AnnexBToAVCC` match the mock-server framing in `apps/mock-server/src/preview-stream.ts` and [plan/API.md](../../plan/API.md).
+Proof that `internal/preview` `PackChunk` and `AnnexBToAVCC` match the mock-server framing in `apps/mock-server/src/preview-stream.ts` and [docs/API.md](../../../docs/API.md).
 
 ## Binary format
 

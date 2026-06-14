@@ -2,7 +2,7 @@
 
 Mini proof: fill RGBA red, convert to I420, encode one IDR access unit with libx264 (`ultrafast` + `zerolatency`, H.264 **baseline**, Annex-B) and dump AVCC-style length-prefixed NALs for P5.8.
 
-Encoder settings align with [plan/architecture/preview.md](../../../plan/architecture/preview.md).
+Encoder settings align with [docs/ARCHITECTURE.md](../../../docs/ARCHITECTURE.md) and `internal/preview/enc_x264.go`.
 
 ## Prerequisites
 
