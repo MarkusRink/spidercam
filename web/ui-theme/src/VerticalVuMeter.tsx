@@ -1,4 +1,4 @@
-import { levelPct } from "./derive.js";
+import { formatDbfs, levelPct } from "./derive.js";
 
 export function VerticalVuMeter(props: {
   rmsDbfs: number;
@@ -29,8 +29,8 @@ export function VerticalVuMeter(props: {
           style={{ bottom: `${levelPct(props.peakDbfs)}%` }}
         />
       </div>
-      <span class="font-mono text-[10px] tabular-nums text-(--color-spider-muted)">
-        {props.label ?? `${props.rmsDbfs.toFixed(1)}`}
+      <span class="inline-block min-w-[5ch] text-center font-mono text-[10px] tabular-nums text-(--color-spider-muted)">
+        {props.label ?? formatDbfs(props.rmsDbfs)}
       </span>
     </div>
   );

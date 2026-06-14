@@ -10,7 +10,15 @@ import (
 
 const compositorFPS = 30
 
+type CameraReader interface {
+	ReadCamera() (rgba []byte, width, height int, ok bool)
+}
+
 func RunMockCompositor(ctx context.Context, stream *Stream, rm *room.Room, onCut func(cut bool, sel *protocol.SelectionState)) {
+	RunCompositor(ctx, stream, rm, nil, onCut)
+}
+
+func RunCompositor(ctx context.Context, stream *Stream, rm *room.Room, camera CameraReader, onCut func(cut bool, sel *protocol.SelectionState)) {
 	width := stream.cfg.Width
 	height := stream.cfg.Height
 	rgba := make([]byte, width*height*4)
@@ -33,6 +41,15 @@ func RunMockCompositor(ctx context.Context, stream *Stream, rm *room.Room, onCut
 				if state.Selection != nil {
 					copy := *state.Selection
 					sel = &copy
+				}
+				if camera != nil {
+					if camRGBA, w, h, ok := camera.ReadCamera(); ok && len(camRGBA) > 0 {
+						if w == width && h == height {
+							copy(frame.RGBA, camRGBA)
+						} else {
+							scaleRGBA(frame.RGBA, width, height, camRGBA, w, h)
+						}
+					}
 				}
 				cut := stream.OnFrame(frame, sel)
 				if onCut != nil {

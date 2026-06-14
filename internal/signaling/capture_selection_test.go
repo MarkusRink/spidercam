@@ -52,6 +52,36 @@ func TestApplyCaptureSelectionKeepsExistingWhenPatchOmitsField(t *testing.T) {
 	}
 }
 
+func TestApplyCaptureSelectionKeepsBusyCameraWhenPatchOmitsField(t *testing.T) {
+	r := room.New("http://127.0.0.1:1234/")
+	devices := protocol.CaptureDevices{
+		Mics:    []protocol.DeviceInfo{{ID: "mic-a", Label: "Mic A"}, {ID: "mic-b", Label: "Mic B"}},
+		Cameras: []protocol.DeviceInfo{{ID: "/dev/video0", Label: "Integrated"}, {ID: "/dev/video5", Label: "USB Webcam"}},
+		Sinks:   []protocol.DeviceInfo{{ID: "sink-a", Label: "Sink A"}},
+	}
+	if _, err := ApplyCaptureSelection(r, devices, protocol.CaptureSelection{
+		MicID: "mic-a", CameraID: "/dev/video5", SinkID: "sink-a",
+	}); err != nil {
+		t.Fatalf("seed selection: %v", err)
+	}
+
+	busyList := protocol.CaptureDevices{
+		Mics:    devices.Mics,
+		Cameras: []protocol.DeviceInfo{{ID: "/dev/video0", Label: "Integrated"}},
+		Sinks:   devices.Sinks,
+	}
+	got, err := ApplyCaptureSelection(r, busyList, protocol.CaptureSelection{MicID: "mic-b"})
+	if err != nil {
+		t.Fatalf("apply partial mic with busy camera omitted from list: %v", err)
+	}
+	if got.MicID != "mic-b" {
+		t.Fatalf("mic id = %q, want mic-b", got.MicID)
+	}
+	if got.CameraID != "/dev/video5" {
+		t.Fatalf("camera id = %q, want /dev/video5 kept while device is open", got.CameraID)
+	}
+}
+
 func TestApplyCaptureSelectionRejectsUnknownPatchedID(t *testing.T) {
 	r := room.New("http://127.0.0.1:1234/")
 	_, err := ApplyCaptureSelection(r, sampleCaptureDevices(), protocol.CaptureSelection{MicID: "missing"})

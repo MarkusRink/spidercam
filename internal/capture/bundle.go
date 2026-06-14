@@ -135,16 +135,17 @@ func (b *Bundle) Reopen(ctx context.Context, sel Selection) error {
 	}
 
 	if sel.CameraID != b.selection.CameraID {
-		if b.camera != nil {
-			b.camera.close()
-			b.camera = nil
-		}
+		var newCam *v4l2Camera
 		if sel.CameraID != "" {
-			b.camera, err = openCamera(sel.CameraID)
+			newCam, err = openCamera(sel.CameraID)
 			if err != nil {
 				return err
 			}
 		}
+		if b.camera != nil {
+			b.camera.close()
+		}
+		b.camera = newCam
 	}
 
 	b.selection = sel

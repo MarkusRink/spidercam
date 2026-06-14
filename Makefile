@@ -38,5 +38,5 @@ sync-ui: $(WEB_HOST_DIST) $(WEB_PARTICIPANT_DIST)
 
 $(EMBED_HOST_UI) $(EMBED_PARTICIPANT_UI): sync-ui
 
-build: sync-ui
+build: web sync-ui
 	$(NATIVE_CAPTURE_ENV) go build $(NATIVE_CAPTURE_TAGS) -o bin/spidercamd ./cmd/spidercamd

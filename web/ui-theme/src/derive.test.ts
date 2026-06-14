@@ -244,23 +244,27 @@ describe("loopDelayColor", () => {
 });
 
 describe("transportCells", () => {
-  it("returns dashes for host WebRTC slots", () => {
+  it("returns host capture stats instead of WebRTC slots", () => {
     const cells = transportCells(
       baseMetric({
         role: "host",
         participantId: HostStreamID,
-        framesPerSecond: 30,
+        snrDb: 14,
+        vad: true,
+        scoreSmooth: 0.5,
+        jitterBufferFrames: 3,
+        peakDbfs: -20,
         audioActive: true,
         videoActive: false,
       }),
       true,
     );
     expect(cells.map((c) => c.text)).toEqual([
-      "—",
-      "—",
-      "—",
-      "—",
-      "30fps",
+      "14.0 SNR",
+      "VAD",
+      "50%",
+      "buf 3",
+      "-20.0",
       "A-",
     ]);
   });

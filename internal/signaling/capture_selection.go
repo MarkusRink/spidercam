@@ -12,15 +12,15 @@ var errUnknownCaptureDevice = errors.New("unknown device id")
 func ApplyCaptureSelection(r *room.Room, devices protocol.CaptureDevices, patch protocol.CaptureSelection) (protocol.CaptureState, error) {
 	current := r.State().Capture
 
-	mic, ok := resolveCaptureDevice(devices.Mics, patch.MicID, current.MicID)
+	mic, ok := resolveCaptureDevice(devices.Mics, patch.MicID, current.MicID, false)
 	if !ok {
 		return current, errUnknownCaptureDevice
 	}
-	camera, ok := resolveCaptureDevice(devices.Cameras, patch.CameraID, current.CameraID)
+	camera, ok := resolveCaptureDevice(devices.Cameras, patch.CameraID, current.CameraID, true)
 	if !ok {
 		return current, errUnknownCaptureDevice
 	}
-	sink, ok := resolveCaptureDevice(devices.Sinks, patch.SinkID, current.SinkID)
+	sink, ok := resolveCaptureDevice(devices.Sinks, patch.SinkID, current.SinkID, false)
 	if !ok {
 		return current, errUnknownCaptureDevice
 	}
@@ -54,13 +54,16 @@ func EnsureDefaultCaptureSelection(r *room.Room, useFixtures bool) (protocol.Cap
 	return EnsureDefaultCapture(r, devices)
 }
 
-func resolveCaptureDevice(devs []protocol.DeviceInfo, patchID, currentID string) (protocol.DeviceInfo, bool) {
+func resolveCaptureDevice(devs []protocol.DeviceInfo, patchID, currentID string, keepStaleCurrent bool) (protocol.DeviceInfo, bool) {
 	if patchID != "" {
 		return deviceByID(devs, patchID)
 	}
 	if currentID != "" {
 		if dev, ok := deviceByID(devs, currentID); ok {
 			return dev, true
+		}
+		if keepStaleCurrent {
+			return protocol.DeviceInfo{ID: currentID, Label: currentID}, true
 		}
 	}
 	return deviceByID(devs, firstDeviceID(devs))

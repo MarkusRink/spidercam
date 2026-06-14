@@ -84,8 +84,8 @@ func NewBridge(engine *Engine, rm *room.Room, sc *scenario.Engine, w output.Writ
 	}
 }
 
-func (b *Bridge) Start(ctx context.Context) {
-	go b.engine.Run(ctx, func(frame mixer.Frame) {
+func (b *Bridge) Start(ctx context.Context, feed CaptureFeed) {
+	go b.engine.Run(ctx, feed, func(frame mixer.Frame) {
 		if b.output != nil {
 			_ = b.output.WritePCM(frame.PCM)
 		}
@@ -110,7 +110,9 @@ func (b *Bridge) publishRoom(frame mixer.Frame) {
 	}
 
 	b.room.UpdateState(func(s *protocol.RoomState) {
-		s.Metrics = metrics
+		if len(metrics) > 0 {
+			s.Metrics = metrics
+		}
 		s.Reference = ref
 		selCopy := sel
 		s.Selection = &selCopy
@@ -166,7 +168,20 @@ func SetupMockAudio(ctx context.Context, rm *room.Room, sc *scenario.Engine) (*E
 
 	writer := output.NewMockWriter()
 	bridge := NewBridge(engine, rm, sc, writer)
-	bridge.Start(ctx)
+	bridge.Start(ctx, nil)
 
 	return engine, capture, writer
+}
+
+func SetupProductionAudio(ctx context.Context, rm *room.Room, sc *scenario.Engine, feed CaptureFeed, w output.Writer) *Engine {
+	cfg := rm.Config()
+	engine := NewEngine(cfg)
+
+	host := processor.NewPipeline(protocol.HostStreamID, "Host", protocol.StreamRoleHost)
+	engine.AttachStream(host)
+
+	bridge := NewBridge(engine, rm, sc, w)
+	bridge.Start(ctx, feed)
+
+	return engine
 }

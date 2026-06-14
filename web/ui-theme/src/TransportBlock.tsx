@@ -9,7 +9,7 @@ function toneClass(tone?: string) {
 
 export function TransportBlock(props: { cells: TransportCell[] }) {
   return (
-    <div class="grid grid-cols-3 gap-x-1 gap-y-0.5 text-[9px] tabular-nums">
+    <div class="grid grid-cols-3 gap-x-1 gap-y-0.5 font-mono text-[9px] tabular-nums">
       <For each={props.cells}>
         {(c) => <span class={toneClass(c.tone)}>{c.text}</span>}
       </For>

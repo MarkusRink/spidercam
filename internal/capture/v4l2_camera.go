@@ -127,27 +127,46 @@ func canCapture(devPath string) bool {
 		return false
 	}
 	defer cam.Close()
-	return len(cam.GetSupportedFormats()) > 0
+	_, _, _, err = configureCamera(cam)
+	return err == nil
 }
 
 func configureCamera(cam *webcam.Webcam) (string, uint32, uint32, error) {
 	formats := cam.GetSupportedFormats()
-	sizes := [][2]uint32{{640, 480}, {1280, 720}, {320, 240}, {800, 600}}
+	sizes := [][2]uint32{{1280, 720}, {640, 480}, {800, 600}, {320, 240}}
 
-	for _, want := range []string{"MJPEG", "YUYV"} {
-		for pix, desc := range formats {
-			if !strings.Contains(desc, want) {
-				continue
-			}
-			for _, size := range sizes {
-				gotPix, w, h, err := cam.SetImageFormat(pix, size[0], size[1])
-				if err == nil {
-					return formats[gotPix], w, h, nil
-				}
+	type fmtTry struct {
+		pix  webcam.PixelFormat
+		desc string
+	}
+	tries := make([]fmtTry, 0, len(formats))
+	for pix, desc := range formats {
+		tries = append(tries, fmtTry{pix: pix, desc: desc})
+	}
+	sort.Slice(tries, func(i, j int) bool {
+		return formatPriority(tries[i].desc) < formatPriority(tries[j].desc)
+	})
+
+	for _, f := range tries {
+		for _, size := range sizes {
+			gotPix, w, h, err := cam.SetImageFormat(f.pix, size[0], size[1])
+			if err == nil {
+				return formats[gotPix], w, h, nil
 			}
 		}
 	}
-	return "", 0, 0, fmt.Errorf("no MJPEG or YUYV format at a supported resolution")
+	return "", 0, 0, fmt.Errorf("no capturable format at a supported resolution")
+}
+
+func formatPriority(desc string) int {
+	switch {
+	case strings.Contains(desc, "MJPEG"):
+		return 0
+	case strings.Contains(desc, "YUYV"):
+		return 1
+	default:
+		return 2
+	}
 }
 
 func frameToRGBA(frame []byte, format string, width, height uint32) (*image.RGBA, error) {

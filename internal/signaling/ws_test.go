@@ -26,7 +26,7 @@ func TestHostStateRESTHasParticipants(t *testing.T) {
 	rm.SetState(state)
 
 	mux := http.NewServeMux()
-	RegisterHostREST(mux, rm, nil, true)
+	RegisterHostREST(mux, rm, nil, true, nil)
 
 	srv := httptest.NewServer(mux)
 	defer srv.Close()

@@ -1,21 +1,22 @@
 import { StateTimeline, VerticalVuMeter } from "@spidercam/ui-theme";
-import { onCleanup, onMount } from "solid-js";
+import { onCleanup } from "solid-js";
 import { PreviewStream } from "../adapters/preview-stream.js";
 import { useSessionStore } from "../stores/session-store.js";
 
 export function OutputPreview(props: { class?: string }) {
   const store = useSessionStore();
-  let canvasRef: HTMLCanvasElement | undefined;
   let preview: PreviewStream | null = null;
 
-  onMount(() => {
-    if (!canvasRef) {
+  onCleanup(() => preview?.disconnect());
+
+  const bindCanvas = (el: HTMLCanvasElement) => {
+    if (!el) {
       return;
     }
-    preview = new PreviewStream(canvasRef);
+    preview?.disconnect();
+    preview = new PreviewStream(el);
     preview.connect();
-    onCleanup(() => preview?.disconnect());
-  });
+  };
 
   const meters = () => store.meters();
 
@@ -24,9 +25,7 @@ export function OutputPreview(props: { class?: string }) {
       <div class="flex min-h-0 min-w-0 flex-1 gap-3">
         <div class="flex min-h-0 min-w-0 flex-1 items-center justify-center">
           <canvas
-            ref={(el) => {
-              canvasRef = el;
-            }}
+            ref={bindCanvas}
             width={640}
             height={360}
             class="max-h-full max-w-full h-auto w-auto rounded-(--radius-spider-sm) bg-black object-contain"

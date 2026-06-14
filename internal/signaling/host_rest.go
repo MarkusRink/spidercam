@@ -1,13 +1,14 @@
 package signaling
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/markus/spidercam/internal/protocol"
 	"github.com/markus/spidercam/internal/room"
 )
 
-func RegisterHostREST(mux *http.ServeMux, r *room.Room, proc StreamProcessor, useFixtureDevices bool) {
+func RegisterHostREST(mux *http.ServeMux, r *room.Room, proc StreamProcessor, useFixtureDevices bool, reopener CaptureReopener) {
 	mux.HandleFunc("GET /api/v1/host/state", func(w http.ResponseWriter, _ *http.Request) {
 		writeJSON(w, http.StatusOK, r.State())
 	})
@@ -48,6 +49,10 @@ func RegisterHostREST(mux *http.ServeMux, r *room.Room, proc StreamProcessor, us
 		capture, err := ApplyCaptureSelection(r, devices, selection)
 		if err != nil {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return
+		}
+		if err := reopenCaptureState(context.Background(), reopener, capture); err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 			return
 		}
 		writeJSON(w, http.StatusOK, capture)

@@ -192,6 +192,29 @@ void sp_x264_force_keyframe(sp_x264_enc *enc)
 	}
 }
 
+static int nal_is_keyframe(x264_nal_t *nals, int i_nals)
+{
+	for (int i = 0; i < i_nals; i++) {
+		const uint8_t *p = nals[i].p_payload;
+		int len = nals[i].i_payload;
+		if (len >= 4 && p[0] == 0 && p[1] == 0 && p[2] == 0 && p[3] == 1) {
+			p += 4;
+			len -= 4;
+		} else if (len >= 3 && p[0] == 0 && p[1] == 0 && p[2] == 1) {
+			p += 3;
+			len -= 3;
+		}
+		if (len <= 0) {
+			continue;
+		}
+		int type = p[0] & 0x1f;
+		if (type == 5 || type == 7) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
 int sp_x264_encode(
 	sp_x264_enc *enc,
 	const uint8_t *rgba,
@@ -213,6 +236,7 @@ int sp_x264_encode(
 	rgba_to_i420(rgba, width * 4, width, height, &enc->pic_in.img);
 	enc->pic_in.i_pts = pts;
 	enc->pic_in.i_dts = pts;
+	int want_key = enc->force_keyframe;
 	if (enc->force_keyframe) {
 		enc->pic_in.i_type = X264_TYPE_IDR;
 		enc->force_keyframe = 0;
@@ -237,6 +261,7 @@ int sp_x264_encode(
 	}
 	*out_avcc = enc->avcc_buf;
 	*out_len = enc->avcc_len;
-	*is_keyframe = pic_out.i_type == X264_TYPE_IDR ? 1 : 0;
+	*is_keyframe = want_key || pic_out.i_type == X264_TYPE_IDR ||
+		pic_out.i_type == X264_TYPE_I || nal_is_keyframe(nals, i_nals);
 	return 0;
 }

@@ -6,6 +6,23 @@ const chunkHeaderSize = 13
 
 const flagKeyframe byte = 0x01
 
+func AvccIsKeyframe(avcc []byte) bool {
+	off := 0
+	for off+4 <= len(avcc) {
+		nalLen := int(binary.BigEndian.Uint32(avcc[off : off+4]))
+		off += 4
+		if nalLen <= 0 || off+nalLen > len(avcc) {
+			break
+		}
+		nalType := avcc[off] & 0x1f
+		if nalType == 5 || nalType == 7 || nalType == 8 {
+			return true
+		}
+		off += nalLen
+	}
+	return false
+}
+
 func PackChunk(avcc []byte, pts uint64, keyframe bool) []byte {
 	flags := byte(0)
 	if keyframe {

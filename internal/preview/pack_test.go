@@ -48,7 +48,7 @@ func TestPackChunkKeyframe(t *testing.T) {
 }
 
 func TestPackChunkNonKeyframe(t *testing.T) {
-	avcc := []byte{0, 0, 0, 5, 0x67, 0x42, 0xe0, 0x1e, 0x96}
+	avcc := []byte{0, 0, 0, 1, 0x21}
 	chunk := PackChunk(avcc, 42, false)
 
 	if chunk[0] != 0 {
@@ -59,6 +59,18 @@ func TestPackChunkNonKeyframe(t *testing.T) {
 	}
 	if got := binary.BigEndian.Uint32(chunk[9:13]); got != uint32(len(avcc)) {
 		t.Fatalf("nal_len = %d, want %d", got, len(avcc))
+	}
+}
+
+func TestAvccIsKeyframe(t *testing.T) {
+	annexB := loadKeyframeFixture(t)
+	avcc := AnnexBToAVCC(annexB)
+	if !AvccIsKeyframe(avcc) {
+		t.Fatal("fixture keyframe avcc should be detected as keyframe")
+	}
+	delta := []byte{0, 0, 0, 1, 0x21}
+	if AvccIsKeyframe(delta) {
+		t.Fatal("P-slice only avcc should not be keyframe")
 	}
 }
 

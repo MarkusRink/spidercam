@@ -76,12 +76,22 @@ func New(cfg Config) (*Stream, error) {
 		}
 	}
 
+	if enc != nil {
+		enc.ForceKeyframe()
+	}
+
 	return &Stream{
 		cfg:       cfg,
 		enc:       enc,
-		out:       make(chan []byte, 8),
+		out:       make(chan []byte, 32),
 		startTime: time.Now(),
 	}, nil
+}
+
+func (s *Stream) ForceKeyframe() {
+	if s.enc != nil {
+		s.enc.ForceKeyframe()
+	}
 }
 
 func (s *Stream) OnFrame(v VideoFrame, sel *protocol.SelectionState) bool {
@@ -99,6 +109,11 @@ func (s *Stream) OnFrame(v VideoFrame, sel *protocol.SelectionState) bool {
 		return cut
 	}
 
+	nextFrame := s.frameN + 1
+	if nextFrame == 1 || nextFrame%uint64(s.cfg.FPS) == 0 {
+		s.enc.ForceKeyframe()
+	}
+
 	ts := time.Now()
 	result, err := s.enc.Encode(v.RGBA, v.Width, v.Height, ts)
 	if err != nil || len(result.AVCC) == 0 {
@@ -107,10 +122,15 @@ func (s *Stream) OnFrame(v VideoFrame, sel *protocol.SelectionState) bool {
 
 	pts := uint64(time.Since(s.startTime).Microseconds())
 	s.frameN++
-	chunk := PackChunk(result.AVCC, pts, result.Keyframe)
-	select {
-	case s.out <- chunk:
-	default:
+	isKey := result.Keyframe || AvccIsKeyframe(result.AVCC)
+	chunk := PackChunk(result.AVCC, pts, isKey)
+	if isKey {
+		s.out <- chunk
+	} else {
+		select {
+		case s.out <- chunk:
+		default:
+		}
 	}
 	return cut
 }

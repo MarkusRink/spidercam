@@ -67,18 +67,37 @@ func (e *Engine) ApplyConfig(cfg protocol.HostConfig) {
 	e.reference.DelayTracker().ApplyConfig(cfg)
 }
 
-func (e *Engine) Run(ctx context.Context, onMix func(mixer.Frame)) {
+func (e *Engine) Run(ctx context.Context, feed CaptureFeed, onMix func(mixer.Frame)) {
 	ticker := time.NewTicker(audiomath.FrameMs * time.Millisecond)
 	defer ticker.Stop()
 	refFrame := make([]float32, audiomath.FrameSamples)
+	micBuf := make([]float32, audiomath.FrameSamples)
+	monBuf := make([]float32, audiomath.FrameSamples)
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
+			if feed != nil {
+				e.ingestCapture(feed, micBuf, monBuf)
+			}
 			e.tick(refFrame, onMix)
 		}
+	}
+}
+
+func (e *Engine) ingestCapture(feed CaptureFeed, micBuf, monBuf []float32) {
+	micN := feed.ReadMic(micBuf)
+	if host := e.Stream(protocol.HostStreamID); host != nil {
+		if micN > 0 {
+			host.Jitter().Push(micBuf[:micN])
+		} else {
+			host.Jitter().PushSilence()
+		}
+	}
+	if n := feed.ReadMonitor(monBuf); n > 0 {
+		e.reference.PushFrame(monBuf[:n])
 	}
 }
 

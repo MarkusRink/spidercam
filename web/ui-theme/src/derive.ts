@@ -11,6 +11,13 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
+export function formatDbfs(db: number): string {
+  if (!Number.isFinite(db)) {
+    return "-∞";
+  }
+  return db.toFixed(1);
+}
+
 export function levelPct(db: number): number {
   return clamp((db + 60) / 60, 0, 1) * 100;
 }
@@ -91,16 +98,12 @@ export function transportCells(
   isHost: boolean,
 ): TransportCell[] {
   if (isHost) {
-    const fps =
-      metric.framesPerSecond != null
-        ? `${Math.round(metric.framesPerSecond)}fps`
-        : "—";
     return [
-      { text: "—" },
-      { text: "—" },
-      { text: "—" },
-      { text: "—" },
-      { text: fps },
+      { text: `${formatDbfs(metric.snrDb)} SNR` },
+      { text: metric.vad ? "VAD" : "idle" },
+      { text: `${Math.round(metric.scoreSmooth * 100)}%` },
+      { text: `buf ${metric.jitterBufferFrames}` },
+      { text: formatDbfs(metric.peakDbfs) },
       { text: avLabel(metric.audioActive, metric.videoActive) },
     ];
   }

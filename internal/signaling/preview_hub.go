@@ -35,6 +35,7 @@ func (h *PreviewHub) HandleUpgrade(w http.ResponseWriter, r *http.Request) {
 	}
 	client := &previewClient{conn: conn}
 	h.addClient(client)
+	h.stream.ForceKeyframe()
 	_ = client.sendJSON(h.stream.InitMessage())
 
 	go func() {

@@ -105,6 +105,27 @@ func Run(ctx context.Context, cfg Config) error {
 	}
 	_ = outWriter
 
+	var captureReopener signaling.CaptureReopener
+	var previewCamera preview.CameraReader
+	if !cfg.Mock {
+		capState := rm.State().Capture
+		bundle, err := capture.Open(ctx, capture.Selection{
+			MicID:    capState.MicID,
+			CameraID: capState.CameraID,
+			SinkID:   capState.SinkID,
+		}, capture.DefaultSampleRate)
+		if err != nil {
+			log.Printf("capture open: %v", err)
+		} else {
+			previewCamera = bundle
+			captureReopener = &signaling.CaptureBundleReopener{Bundle: bundle}
+			hostHub.SetCaptureReopener(captureReopener)
+			audioEngine = audio.SetupProductionAudio(ctx, rm, engine, bundle, outWriter)
+			hostHub.SetStreamProcessor(audioEngine)
+			defer func() { _ = bundle.Close() }()
+		}
+	}
+
 	if cfg.Mock {
 		log.Print("mock mode enabled (capture/output stubbed)")
 	} else if !capture.NativeEnumeration {
@@ -113,7 +134,7 @@ func Run(ctx context.Context, cfg Config) error {
 
 	engine.Start(ctx)
 	go previewHub.PublishLoop(ctx)
-	preview.RunMockCompositor(ctx, previewStream, rm, func(cut bool, sel *protocol.SelectionState) {
+	onPreviewCut := func(cut bool, sel *protocol.SelectionState) {
 		if !cut || sel == nil {
 			return
 		}
@@ -122,7 +143,12 @@ func Run(ctx context.Context, cfg Config) error {
 			ActiveVideoID: sel.ActiveVideoID,
 			Seq:           int(previewStream.Seq()),
 		})
-	})
+	}
+	if cfg.Mock {
+		preview.RunMockCompositor(ctx, previewStream, rm, onPreviewCut)
+	} else {
+		preview.RunCompositor(ctx, previewStream, rm, previewCamera, onPreviewCut)
+	}
 
 	hostSrv := &http.Server{
 		Addr: cfg.HostHTTPAddr,
@@ -131,6 +157,7 @@ func Run(ctx context.Context, cfg Config) error {
 			PreviewHub:        previewHub,
 			StreamProcessor:   audioEngine,
 			UseFixtureDevices: cfg.Mock,
+			CaptureReopener:   captureReopener,
 		}),
 	}
 	participantSrv := &http.Server{

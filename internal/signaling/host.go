@@ -1,6 +1,7 @@
 package signaling
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"sync"
@@ -14,6 +15,7 @@ type HostHub struct {
 	room              *room.Room
 	processor         StreamProcessor
 	useFixtureDevices bool
+	captureReopener   CaptureReopener
 
 	mu      sync.Mutex
 	clients map[*wsClient]struct{}
@@ -29,6 +31,10 @@ func NewHostHub(r *room.Room, useFixtureDevices bool) *HostHub {
 
 func (h *HostHub) SetStreamProcessor(p StreamProcessor) {
 	h.processor = p
+}
+
+func (h *HostHub) SetCaptureReopener(r CaptureReopener) {
+	h.captureReopener = r
 }
 
 func (h *HostHub) HandleUpgrade(w http.ResponseWriter, r *http.Request) {
@@ -98,6 +104,7 @@ func (h *HostHub) handleMessage(client *wsClient, data []byte) {
 			return
 		}
 		if capture, changed, err := EnsureDefaultCapture(h.room, devices); err == nil && changed {
+			_ = reopenCaptureState(context.Background(), h.captureReopener, capture)
 			_ = client.sendJSON(protocol.CaptureDevicesUpdatedMsg{
 				Type:    "capture-devices-updated",
 				Capture: capture,
@@ -138,6 +145,14 @@ func (h *HostHub) handleSetCaptureDevices(client *wsClient, selection protocol.C
 			Type:    "capture-devices-updated",
 			Capture: h.room.State().Capture,
 			Error:   err.Error(),
+		})
+		return
+	}
+	if reopenErr := reopenCaptureState(context.Background(), h.captureReopener, capture); reopenErr != nil {
+		_ = client.sendJSON(protocol.CaptureDevicesUpdatedMsg{
+			Type:    "capture-devices-updated",
+			Capture: h.room.State().Capture,
+			Error:   reopenErr.Error(),
 		})
 		return
 	}
