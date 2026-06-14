@@ -44,7 +44,17 @@ Scenario helpers (`POST /dev/scenario/*`) are only served on the host mock port 
 npm run test:ui
 ```
 
-Playwright starts the mock server plus `vite preview` on `:4175` (host) and `:4174` (participant), with fake media device flags for Chromium.
+Runs Playwright headless. Specs live in `e2e/` (`host`, `participant`, `room-flow`, `participant-reconnect`). Playwright starts the mock server plus `vite preview` on `:4175` (host) and `:4174` (participant), with fake media device flags for Chromium.
+
+To watch or debug tests interactively, from the repo root:
+
+**UI mode** (pick tests, timeline, screenshots):
+
+```bash
+npx playwright test --ui -c e2e/playwright.config.ts
+```
+
+Install Chromium for Playwright if needed: `npx playwright install chrome`.
 
 ## Build
 
