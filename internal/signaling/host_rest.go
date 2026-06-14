@@ -3,12 +3,11 @@ package signaling
 import (
 	"net/http"
 
-	"github.com/markus/spidercam/internal/fixtures"
 	"github.com/markus/spidercam/internal/protocol"
 	"github.com/markus/spidercam/internal/room"
 )
 
-func RegisterHostREST(mux *http.ServeMux, r *room.Room, proc StreamProcessor) {
+func RegisterHostREST(mux *http.ServeMux, r *room.Room, proc StreamProcessor, useFixtureDevices bool) {
 	mux.HandleFunc("GET /api/v1/host/state", func(w http.ResponseWriter, _ *http.Request) {
 		writeJSON(w, http.StatusOK, r.State())
 	})
@@ -27,9 +26,9 @@ func RegisterHostREST(mux *http.ServeMux, r *room.Room, proc StreamProcessor) {
 	})
 
 	mux.HandleFunc("GET /api/v1/capture/devices", func(w http.ResponseWriter, _ *http.Request) {
-		devices, err := fixtures.LoadCaptureDevices()
+		devices, err := ListCaptureDevices(useFixtureDevices)
 		if err != nil {
-			http.Error(w, "fixtures unavailable", http.StatusInternalServerError)
+			http.Error(w, "device enumeration failed", http.StatusInternalServerError)
 			return
 		}
 		writeJSON(w, http.StatusOK, devices)
@@ -41,19 +40,17 @@ func RegisterHostREST(mux *http.ServeMux, r *room.Room, proc StreamProcessor) {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
 			return
 		}
-		devices, err := fixtures.LoadCaptureDevices()
+		devices, err := ListCaptureDevices(useFixtureDevices)
 		if err != nil {
-			http.Error(w, "fixtures unavailable", http.StatusInternalServerError)
+			http.Error(w, "device enumeration failed", http.StatusInternalServerError)
 			return
 		}
-		mic, camera, sink, valid := resolveCaptureSelection(devices, selection)
-		if !valid {
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "unknown device id"})
+		capture, err := ApplyCaptureSelection(r, devices, selection)
+		if err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 			return
 		}
-		r.SetCaptureSelection(selection.MicID, selection.CameraID, selection.SinkID)
-		r.SetCaptureLabels(mic.Label, camera.Label, sink.Label)
-		writeJSON(w, http.StatusOK, r.State().Capture)
+		writeJSON(w, http.StatusOK, capture)
 	})
 
 	mux.HandleFunc("POST /api/v1/host/stream-processing", func(w http.ResponseWriter, req *http.Request) {

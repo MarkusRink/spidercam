@@ -58,6 +58,40 @@ func TestHostStateREST(t *testing.T) {
 	}
 }
 
+func TestProductionHostStateClean(t *testing.T) {
+	d := StartDaemon(t, false)
+	resp, err := http.Get(d.HostBase() + "/api/v1/host/state")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d", resp.StatusCode)
+	}
+	var state protocol.RoomState
+	if err := json.NewDecoder(resp.Body).Decode(&state); err != nil {
+		t.Fatalf("decode state: %v", err)
+	}
+	if len(state.Participants) != 0 {
+		t.Fatalf("participants = %d, want 0", len(state.Participants))
+	}
+	if state.Selection == nil || state.Selection.MixerState != protocol.MixerSilence {
+		t.Fatal("expected SILENCE mixer state")
+	}
+	hasHost := false
+	for _, m := range state.Metrics {
+		if m.Name == "Alice" || m.Name == "Bob" {
+			t.Fatalf("unexpected demo participant metric %q", m.Name)
+		}
+		if m.ParticipantID == protocol.HostStreamID {
+			hasHost = true
+		}
+	}
+	if !hasHost {
+		t.Fatal("expected host metric in production state")
+	}
+}
+
 func TestHostStateWS(t *testing.T) {
 	d := StartMockDaemon(t)
 	conn, _, err := websocket.DefaultDialer.Dial(d.HostWS(), nil)
@@ -158,6 +192,29 @@ func TestCaptureSelectionREST(t *testing.T) {
 	}
 	if capture.MicID != sel.MicID || capture.CameraID != sel.CameraID || capture.SinkID != sel.SinkID {
 		t.Fatalf("capture = %+v, want selection applied", capture)
+	}
+}
+
+func TestCaptureSelectionPartialREST(t *testing.T) {
+	d := StartMockDaemon(t)
+	body, _ := json.Marshal(map[string]string{"micId": "pw:source:1"})
+	resp, err := http.Post(d.HostBase()+"/api/v1/capture/selection", "application/json", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("partial selection status = %d, want 200", resp.StatusCode)
+	}
+	var capture protocol.CaptureState
+	if err := json.NewDecoder(resp.Body).Decode(&capture); err != nil {
+		t.Fatal(err)
+	}
+	if capture.MicID != "pw:source:1" {
+		t.Fatalf("mic id = %q, want pw:source:1", capture.MicID)
+	}
+	if capture.CameraID == "" || capture.SinkID == "" {
+		t.Fatalf("capture = %+v, want default camera and sink filled", capture)
 	}
 }
 

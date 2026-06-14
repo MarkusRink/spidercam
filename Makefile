@@ -6,8 +6,10 @@ EMBED_HOST_UI := internal/daemon/ui/host/index.html
 EMBED_PARTICIPANT_UI := internal/daemon/ui/participant/index.html
 
 NATIVE_CAPTURE_TAGS :=
+NATIVE_CAPTURE_ENV :=
 ifeq ($(shell pkg-config --exists libpipewire-0.3 2>/dev/null && echo yes),yes)
 NATIVE_CAPTURE_TAGS := -tags spidercam_native_capture
+NATIVE_CAPTURE_ENV := CGO_CFLAGS_ALLOW=-.*
 endif
 
 test:
@@ -17,7 +19,7 @@ e2e:
 	go test ./test/e2e/... -tags=e2e -count=1
 
 check: vet
-	go test ./internal/... -race -count=1 $(NATIVE_CAPTURE_TAGS)
+	$(NATIVE_CAPTURE_ENV) go test ./internal/... -race -count=1 $(NATIVE_CAPTURE_TAGS)
 	$(MAKE) e2e
 
 vet:
@@ -37,4 +39,4 @@ sync-ui: $(WEB_HOST_DIST) $(WEB_PARTICIPANT_DIST)
 $(EMBED_HOST_UI) $(EMBED_PARTICIPANT_UI): sync-ui
 
 build: sync-ui
-	go build -o bin/spidercamd ./cmd/spidercamd
+	$(NATIVE_CAPTURE_ENV) go build $(NATIVE_CAPTURE_TAGS) -o bin/spidercamd ./cmd/spidercamd

@@ -118,9 +118,9 @@ Go E2E tests (`test/e2e/`) and CI use this mode.
 - **Signaling and UIs** are fully live on both ports
 - **WebRTC**: participant browser offers after `join`; Pion hub answers and relays ICE
 - **Virtual output**: `internal/output` opens v4l2loopback + PulseAudio sink when devices exist; falls back to unhealthy mock writer on timeout or missing devices
-- **Room state**: `internal/scenario` animates metrics, reference levels, loop delay, and transport stats for UI demonstration until capture/WebRTC are wired into the audio engine
+- **Room state**: starts host-only idle via `room.ApplyBootstrapIdle` — no demo participants, silent metrics, `SILENCE` selection; participants appear only after real joins; scenario engine broadcasts static state (hold timers only) until capture/WebRTC are wired into the audio engine
 - **Preview**: H.264 stream on `/api/v1/ws/preview` from mock compositor + real or mock encoder depending on build tags
-- **Capture device API**: returns fixture device lists (native `capture.ListDevices()` is implemented and tested separately)
+- **Capture device API**: native enumeration via `capture.ListDevices()` when built with `spidercam_native_capture`; optional env vars `SPIDERCAM_MIC`, `SPIDERCAM_CAMERA`, `SPIDERCAM_PLAYBACK_SINK` seed bootstrap selection; missing IDs are filled from the first listed device at startup and on `list-capture-devices`
 
 Native packages (`internal/capture`, `internal/output`, `internal/preview/enc_x264.go`) are production-ready; daemon integration of live capture → engine → output is the remaining wiring step.
 
@@ -138,7 +138,7 @@ Native packages (`internal/capture`, `internal/output`, `internal/preview/enc_x2
 | Loop | Rate | Owner |
 | ---- | ---- | ----- |
 | Frame processing | 100 Hz (10 ms) | `internal/audio/engine` |
-| Selector + host-state push | 50 Hz (20 ms) | audio bridge → host WS (mock); scenario engine (default) |
+| Selector + host-state push | 50 Hz (20 ms) | audio bridge → host WS (`--mock`); scenario quiet tick (production) |
 | Participant view push | on change + max 10 Hz | participant WS |
 | UI preview (host) | 15 fps H.264 on `/api/v1/ws/preview` | `internal/preview` |
 | Transport stats in `host-state` | 1 Hz | Pion stats (when wired) |
@@ -156,7 +156,9 @@ Teams AEC on the virtual mic does **not** fix pickup that happens on separate la
 
 Linux production builds use cgo (`CGO_ENABLED=1`) for PipeWire capture, libx264 preview, and native AEC/RNNoise shims.
 
-`//go:build !cgo || !linux` stubs in `internal/capture`, `internal/output`, and `internal/preview` allow `go test ./internal/...` without native dev headers. CI installs `libpipewire-0.3-dev` and runs tests with `-tags spidercam_native_capture`.
+`make build` passes `-tags spidercam_native_capture` when `libpipewire-0.3` is available (`CGO_CFLAGS_ALLOW=-.*` for current PipeWire pkg-config flags). Without the tag, capture enumeration falls back to mock I/O stubs.
+
+`//go:build !cgo || !linux || !spidercam_native_capture` stubs in `internal/capture` (and similar in `internal/output`, `internal/preview`) allow `go test ./internal/...` without native dev headers. CI installs `libpipewire-0.3-dev` and runs tests with `-tags spidercam_native_capture`.
 
 ## Resolved architecture choices
 

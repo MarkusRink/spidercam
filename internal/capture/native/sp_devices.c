@@ -72,7 +72,7 @@ static const struct pw_registry_events registry_events = {
 	.global = on_global,
 };
 
-static void on_core_done(void *data, uint32_t id, int seq)
+static void dev_on_core_done(void *data, uint32_t id, int seq)
 {
 	struct list_ctx *ctx = data;
 
@@ -80,9 +80,9 @@ static void on_core_done(void *data, uint32_t id, int seq)
 		pw_main_loop_quit(ctx->loop);
 }
 
-static const struct pw_core_events core_events = {
+static const struct pw_core_events dev_core_events = {
 	PW_VERSION_CORE_EVENTS,
-	.done = on_core_done,
+	.done = dev_on_core_done,
 };
 
 static int list_nodes(sp_device *out, int max, const char *kind)
@@ -113,7 +113,7 @@ static int list_nodes(sp_device *out, int max, const char *kind)
 	if (!ctx.core)
 		goto fail;
 
-	pw_core_add_listener(ctx.core, &ctx.core_listener, &core_events, &ctx);
+	pw_core_add_listener(ctx.core, &ctx.core_listener, &dev_core_events, &ctx);
 
 	ctx.registry = pw_core_get_registry(ctx.core, PW_VERSION_REGISTRY, 0);
 	if (!ctx.registry)

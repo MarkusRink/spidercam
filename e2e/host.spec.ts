@@ -107,4 +107,21 @@ test.describe("host console", () => {
       })
       .toBe(true);
   });
+
+  test("narrow viewport: no horizontal overflow and controls visible", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 800, height: 600 });
+    await gotoHost(page);
+    await expect(page.getByRole("button", { name: "copy URL" })).toBeVisible();
+    await expect(page.getByText("OUT", { exact: true })).toBeVisible();
+    await expect(streamCard(page, "Alice")).toBeVisible();
+
+    const overflow = await page.evaluate(
+      () =>
+        document.documentElement.scrollWidth >
+        document.documentElement.clientWidth,
+    );
+    expect(overflow).toBe(false);
+  });
 });

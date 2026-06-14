@@ -49,6 +49,10 @@ func (d *Daemon) HostPreviewWS() string {
 }
 
 func StartMockDaemon(t *testing.T) *Daemon {
+	return StartDaemon(t, true)
+}
+
+func StartDaemon(t *testing.T, mock bool) *Daemon {
 	t.Helper()
 
 	participantPort := portFromEnv(t, "SPIDERCAM_E2E_PARTICIPANT_PORT", freePort(t))
@@ -59,13 +63,16 @@ func StartMockDaemon(t *testing.T) *Daemon {
 		t.Fatal(err)
 	}
 
-	cmd := exec.Command(
-		binary,
-		"--mock",
+	args := []string{
 		"--no-open-browser",
 		"--participant-addr", fmt.Sprintf("127.0.0.1:%d", participantPort),
 		"--host-addr", fmt.Sprintf("127.0.0.1:%d", hostPort),
-	)
+	}
+	if mock {
+		args = append([]string{"--mock"}, args...)
+	}
+
+	cmd := exec.Command(binary, args...)
 	cmd.Dir = repoRoot()
 	if err := cmd.Start(); err != nil {
 		t.Fatalf("start spidercamd: %v", err)

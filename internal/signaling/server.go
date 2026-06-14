@@ -10,9 +10,10 @@ import (
 )
 
 type HostServices struct {
-	Hub             *HostHub
-	PreviewHub      *PreviewHub
-	StreamProcessor StreamProcessor
+	Hub               *HostHub
+	PreviewHub        *PreviewHub
+	StreamProcessor   StreamProcessor
+	UseFixtureDevices bool
 }
 
 type ParticipantServices struct {
@@ -22,7 +23,7 @@ type ParticipantServices struct {
 func NewHostMux(static fs.FS, uiRoot string, r *room.Room, svc HostServices) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/health", handleHealth)
-	RegisterHostREST(mux, r, svc.StreamProcessor)
+	RegisterHostREST(mux, r, svc.StreamProcessor, svc.UseFixtureDevices)
 	mux.HandleFunc("GET /api/v1/ws", svc.Hub.HandleUpgrade)
 	mux.HandleFunc("GET /api/v1/ws/preview", svc.PreviewHub.HandleUpgrade)
 	mux.Handle("/{path...}", spaHandler(static, uiRoot))

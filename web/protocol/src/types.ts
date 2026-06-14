@@ -136,9 +136,9 @@ export interface CaptureDevices {
 }
 
 export interface CaptureSelection {
-  micId: string;
-  cameraId: string;
-  sinkId: string;
+  micId?: string;
+  cameraId?: string;
+  sinkId?: string;
 }
 
 export interface SelfMetric {

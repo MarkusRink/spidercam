@@ -15,7 +15,7 @@ export function StreamGrid(props: { class?: string }) {
 
   return (
     <div class={props.class}>
-      <div class="grid grid-cols-5 gap-2 content-start font-mono">
+      <div class="grid grid-cols-[repeat(auto-fill,minmax(var(--stream-card-w),1fr))] gap-2 content-start font-mono">
         <For each={streams()}>
           {(metric) => (
             <StreamCard

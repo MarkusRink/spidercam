@@ -26,7 +26,7 @@ func TestHostStateRESTHasParticipants(t *testing.T) {
 	rm.SetState(state)
 
 	mux := http.NewServeMux()
-	RegisterHostREST(mux, rm, nil)
+	RegisterHostREST(mux, rm, nil, true)
 
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
@@ -57,7 +57,7 @@ func TestHostWebSocketReceivesHostState(t *testing.T) {
 	rm.SetState(state)
 
 	engine := scenario.New(rm)
-	hostHub := NewHostHub(rm)
+	hostHub := NewHostHub(rm, true)
 	engine.OnState(hostHub.BroadcastState)
 
 	ctx, cancel := context.WithCancel(context.Background())

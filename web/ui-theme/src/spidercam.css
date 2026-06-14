@@ -17,6 +17,13 @@
   --radius-spider: 3px;
   --radius-spider-sm: 2px;
 
-  --stream-card-w: 168px;
-  --stream-card-h: 240px;
+  --stream-card-w: 140px;
+  --stream-card-h: 200px;
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --stream-card-w: 168px;
+    --stream-card-h: 240px;
+  }
 }

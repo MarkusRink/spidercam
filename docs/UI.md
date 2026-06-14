@@ -93,7 +93,7 @@ Theme tokens in `web/ui-theme/src/spidercam.css`: `--stream-card-w: 168px`, `--s
 
 ## Settings panel (host, always visible)
 
-Right column — not an overlay. Devices + mixer tuning; session RAM only. WS `config` / `set-capture-devices` on change. Implemented in `web/host/src/components/SettingsPanel.tsx`.
+Right column — not an overlay. Devices + mixer tuning; session RAM only. WS `config` / partial `set-capture-devices` on change; device dropdowns are pre-filled on load when the daemon applies default selection. Implemented in `web/host/src/components/SettingsPanel.tsx`.
 
 Default config values: `DefaultHostConfig` in `web/protocol/src/config.ts` (mirrors Go `internal/protocol/config.go`).
 

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/markus/spidercam/internal/audio"
+	"github.com/markus/spidercam/internal/capture"
 	"github.com/markus/spidercam/internal/fixtures"
 	"github.com/markus/spidercam/internal/output"
 	"github.com/markus/spidercam/internal/preview"
@@ -24,13 +25,24 @@ func Run(ctx context.Context, cfg Config) error {
 	printBanner(cfg)
 
 	rm := room.New(cfg.ParticipantURL)
-	if state, err := fixtures.LoadRoutingState(); err == nil {
-		rm.SetState(state)
+	if cfg.Mock {
+		if state, err := fixtures.LoadRoutingState(); err == nil {
+			rm.SetState(state)
+		}
+		if _, _, err := signaling.EnsureDefaultCaptureSelection(rm, true); err != nil {
+			log.Printf("capture defaults: %v", err)
+		}
+	} else {
+		room.ApplyBootstrapIdle(rm)
+		if _, _, err := signaling.EnsureDefaultCaptureSelection(rm, false); err != nil {
+			log.Printf("capture defaults: %v", err)
+		}
 	}
 
 	engine := scenario.New(rm)
+	engine.SetAudioDriven(true)
 	webrtcHub := webrtc.NewHub(rm)
-	hostHub := signaling.NewHostHub(rm)
+	hostHub := signaling.NewHostHub(rm, cfg.Mock)
 	participantHub := signaling.NewParticipantHub(rm, webrtcHub)
 
 	keyframe, err := fixtures.LoadPreviewKeyframe()
@@ -57,7 +69,6 @@ func Run(ctx context.Context, cfg Config) error {
 	var audioEngine *audio.Engine
 	var outWriter output.Writer
 	if cfg.Mock {
-		engine.SetAudioDriven(true)
 		audioEngine, _, outWriter = audio.SetupMockAudio(ctx, rm, engine)
 		hostHub.SetStreamProcessor(audioEngine)
 	} else {
@@ -96,6 +107,8 @@ func Run(ctx context.Context, cfg Config) error {
 
 	if cfg.Mock {
 		log.Print("mock mode enabled (capture/output stubbed)")
+	} else if !capture.NativeEnumeration {
+		log.Print("warning: device list uses mock I/O stubs; install libpipewire-0.3-dev and run make build for real hardware")
 	}
 
 	engine.Start(ctx)
@@ -114,9 +127,10 @@ func Run(ctx context.Context, cfg Config) error {
 	hostSrv := &http.Server{
 		Addr: cfg.HostHTTPAddr,
 		Handler: signaling.NewHostMux(hostFS, hostUIRoot, rm, signaling.HostServices{
-			Hub:             hostHub,
-			PreviewHub:      previewHub,
-			StreamProcessor: audioEngine,
+			Hub:               hostHub,
+			PreviewHub:        previewHub,
+			StreamProcessor:   audioEngine,
+			UseFixtureDevices: cfg.Mock,
 		}),
 	}
 	participantSrv := &http.Server{

@@ -56,7 +56,7 @@ npm install
 make build
 ```
 
-This compiles the host and participant web UIs, embeds them into `bin/spidercamd`, and writes the binary to `bin/spidercamd`. Run `make build` again after UI changes.
+This compiles the host and participant web UIs, embeds them into `bin/spidercamd`, and writes the binary to `bin/spidercamd`. When `libpipewire-0.3-dev` is installed, `make build` also enables native PipeWire capture (`-tags spidercam_native_capture`). Run `make build` again after UI changes.
 
 ### 2. Set up the virtual camera (once per machine)
 
@@ -170,10 +170,10 @@ make build          # builds web UIs, syncs embed assets, bin/spidercamd
 ./bin/spidercamd --mock   # run without real capture/output
 ```
 
-For native PipeWire capture, build with the `spidercam_native_capture` tag (the Makefile enables it automatically when `libpipewire-0.3` is available):
+For native PipeWire capture, `make build` enables the tag automatically when `libpipewire-0.3` is available. Manual build:
 
 ```bash
-go build -tags spidercam_native_capture -o bin/spidercamd ./cmd/spidercamd
+CGO_CFLAGS_ALLOW=-.* go build -tags spidercam_native_capture -o bin/spidercamd ./cmd/spidercamd
 ```
 
 ### Testing

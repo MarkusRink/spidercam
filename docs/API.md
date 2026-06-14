@@ -65,23 +65,25 @@ Enumerate selectable capture devices.
 
 **Response** `200` → `CaptureDevices`
 
-Currently served from test fixtures in the daemon; native enumeration is implemented in `internal/capture.ListDevices()`.
+Native enumeration via `capture.ListDevices()`. Fixture device lists are used only in `--mock` mode (dev/CI).
+
+On startup and on `list-capture-devices`, the daemon fills any missing mic/camera/sink IDs from the first available device in each category (after env-var bootstrap defaults, if set).
 
 ### `POST /api/v1/capture/selection`
 
-Set mic, camera, and playback sink.
+Patch mic, camera, and/or playback sink. All fields in `CaptureSelection` are optional; omitted fields keep the current selection (or the first available device if the stored ID is no longer listed).
 
-**Request body** → `CaptureSelection`
+**Request body** → partial `CaptureSelection` (`micId`, `cameraId`, and/or `sinkId`)
 
 **Response** `200` → `CaptureState`
 
-**Response** `500` — unknown device or reopen failure:
+**Response** `400` — unknown device id in the patch:
 
 ```json
 { "error": "unknown device id" }
 ```
 
-WS equivalent: `set-capture-devices` → `capture-devices-updated`.
+WS equivalent: `set-capture-devices` → `capture-devices-updated` (also sent when `list-capture-devices` applies default selection).
 
 ### `POST /api/v1/host/stream-processing`
 
@@ -122,8 +124,8 @@ WS equivalent: `set-stream-processing`.
 | `type` | Body | Response |
 | ------ | ---- | -------- |
 | `config` | `config: Partial<HostConfig>` | applies immediately; next `host-state` reflects change |
-| `list-capture-devices` | — | `capture-devices` |
-| `set-capture-devices` | `selection: CaptureSelection` | `capture-devices-updated` |
+| `list-capture-devices` | — | `capture-devices`; may also send `capture-devices-updated` when defaults are applied |
+| `set-capture-devices` | partial `CaptureSelection` | `capture-devices-updated` |
 | `set-stream-processing` | `participantId`, `flags: StreamProcessingFlags` | next `host-state` |
 | `copy-participant-url` | — | `participant-url` |
 
@@ -236,10 +238,10 @@ Vite dev proxies `/api` → daemon; production UIs call same-origin `/api`.
 
 | HTTP | When |
 | ---- | ---- |
-| `400` | malformed JSON, out-of-range config |
+| `400` | malformed JSON, out-of-range config, unknown capture device id |
 | `404` | unknown `/api` path |
 | `405` | wrong method |
-| `500` | capture reopen / internal failure |
+| `500` | internal failure |
 
 WebSocket: recoverable errors as `error` JSON on participant socket; host control socket logs to daemon stderr for v1 (no `error` type on `:1235` control WS).
 

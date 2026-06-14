@@ -25,7 +25,7 @@ The host operator is **in the Teams meeting** on the same machine as `spidercamd
 | UC-H6 | Tune aggressiveness | Settings panel: hold, crossfade, ducking, switch margin, score weights; per-card AEC/NS |
 | UC-H7 | Reject TV / Teams bleed | Raw echoPenalty + ref duck; optional per-stream AEC on enhancement branch |
 | UC-H8 | See room-loop latency | Per-card loop text; header global max or `—`; passive GCC-PHAT |
-| UC-H9 | Select capture devices | Mic, webcam, playback output in settings panel; hot reopen |
+| UC-H9 | Select capture devices | Mic, webcam, playback output in settings panel; defaults on load; partial hot reopen |
 | UC-H10 | Clean noisy mics | Per-stream RNNoise toggle; `NS · Nms` timing on card |
 | UC-H11 | Monitor DSP load | Header `enhancementBudgetPct` when AEC/NS active |
 
@@ -52,7 +52,7 @@ Implemented in `web/participant/` with `LiveParticipantSignaling` + `LivePartici
 | Run `spidercamd` | Terminal process starts; browser opens host UI (unless `--no-open-browser`) |
 | Open host UI manually | `http://127.0.0.1:1235/` if tab closed |
 | Copy participant URL | Clipboard `http://<lan-ip>:1234/` |
-| Change capture device | Settings panel dropdown → `set-capture-devices` → daemon updates capture state |
+| Change capture device | Settings panel dropdown → partial `set-capture-devices` → daemon merges and updates capture state |
 | Adjust mixer sliders | Settings panel → partial `config` (session RAM) |
 | Toggle AEC / NS on stream | Stream card → `set-stream-processing` (session RAM) |
 

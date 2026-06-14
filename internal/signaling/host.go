@@ -6,23 +6,24 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
-	"github.com/markus/spidercam/internal/fixtures"
 	"github.com/markus/spidercam/internal/protocol"
 	"github.com/markus/spidercam/internal/room"
 )
 
 type HostHub struct {
-	room      *room.Room
-	processor StreamProcessor
+	room              *room.Room
+	processor         StreamProcessor
+	useFixtureDevices bool
 
 	mu      sync.Mutex
 	clients map[*wsClient]struct{}
 }
 
-func NewHostHub(r *room.Room) *HostHub {
+func NewHostHub(r *room.Room, useFixtureDevices bool) *HostHub {
 	return &HostHub{
-		room:    r,
-		clients: make(map[*wsClient]struct{}),
+		room:              r,
+		useFixtureDevices: useFixtureDevices,
+		clients:           make(map[*wsClient]struct{}),
 	}
 }
 
@@ -92,9 +93,15 @@ func (h *HostHub) handleMessage(client *wsClient, data []byte) {
 		}
 		_ = h.room.UpdateConfig(msg.Config)
 	case "list-capture-devices":
-		devices, err := fixtures.LoadCaptureDevices()
+		devices, err := ListCaptureDevices(h.useFixtureDevices)
 		if err != nil {
 			return
+		}
+		if capture, changed, err := EnsureDefaultCapture(h.room, devices); err == nil && changed {
+			_ = client.sendJSON(protocol.CaptureDevicesUpdatedMsg{
+				Type:    "capture-devices-updated",
+				Capture: capture,
+			})
 		}
 		_ = client.sendJSON(protocol.CaptureDevicesMsg{
 			Type:    "capture-devices",
@@ -121,46 +128,21 @@ func (h *HostHub) handleMessage(client *wsClient, data []byte) {
 }
 
 func (h *HostHub) handleSetCaptureDevices(client *wsClient, selection protocol.CaptureSelection) {
-	devices, err := fixtures.LoadCaptureDevices()
+	devices, err := ListCaptureDevices(h.useFixtureDevices)
 	if err != nil {
 		return
 	}
-	mic, camera, sink, ok := resolveCaptureSelection(devices, selection)
-	if !ok {
+	capture, err := ApplyCaptureSelection(h.room, devices, selection)
+	if err != nil {
 		_ = client.sendJSON(protocol.CaptureDevicesUpdatedMsg{
 			Type:    "capture-devices-updated",
 			Capture: h.room.State().Capture,
-			Error:   "unknown device id",
+			Error:   err.Error(),
 		})
 		return
 	}
-	h.room.SetCaptureSelection(selection.MicID, selection.CameraID, selection.SinkID)
-	h.room.SetCaptureLabels(mic.Label, camera.Label, sink.Label)
 	_ = client.sendJSON(protocol.CaptureDevicesUpdatedMsg{
 		Type:    "capture-devices-updated",
-		Capture: h.room.State().Capture,
+		Capture: capture,
 	})
-}
-
-func resolveCaptureSelection(devices protocol.CaptureDevices, sel protocol.CaptureSelection) (mic, camera, sink protocol.DeviceInfo, ok bool) {
-	for _, d := range devices.Mics {
-		if d.ID == sel.MicID {
-			mic = d
-			break
-		}
-	}
-	for _, d := range devices.Cameras {
-		if d.ID == sel.CameraID {
-			camera = d
-			break
-		}
-	}
-	for _, d := range devices.Sinks {
-		if d.ID == sel.SinkID {
-			sink = d
-			break
-		}
-	}
-	ok = mic.ID != "" && camera.ID != "" && sink.ID != ""
-	return
 }

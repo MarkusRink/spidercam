@@ -152,6 +152,9 @@ export function SessionStoreProvider(props: ParentProps) {
     });
 
     const unsubDevices = signaling.onCaptureDevices(setCaptureDevices);
+    const unsubCapture = signaling.onCaptureUpdated((capture) => {
+      setState((prev) => (prev ? { ...prev, capture } : prev));
+    });
 
     void signaling.connect().then(() => {
       signaling.listCaptureDevices();
@@ -161,6 +164,7 @@ export function SessionStoreProvider(props: ParentProps) {
       cancelAnimationFrame(rafId);
       unsubState();
       unsubDevices();
+      unsubCapture();
       signaling.disconnect();
     });
   });

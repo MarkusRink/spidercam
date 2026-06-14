@@ -56,27 +56,25 @@ function useDebouncedConfig() {
   return { store, push };
 }
 
-export function SettingsPanel() {
+export function SettingsPanel(props: { class?: string }) {
   const { store, push } = useDebouncedConfig();
   const capture = () => store.state()?.capture;
   const devices = () => store.captureDevices();
 
   const setDevice = (field: "micId" | "cameraId" | "sinkId", id: string) => {
-    const c = capture();
-    if (!c) {
-      return;
-    }
-    store.signaling.setCaptureDevices({
-      micId: field === "micId" ? id : c.micId,
-      cameraId: field === "cameraId" ? id : c.cameraId,
-      sinkId: field === "sinkId" ? id : c.sinkId,
-    });
+    const selection =
+      field === "micId"
+        ? { micId: id }
+        : field === "cameraId"
+          ? { cameraId: id }
+          : { sinkId: id };
+    store.signaling.setCaptureDevices(selection);
   };
 
   const weights = createMemo(() => store.config.scoreWeights);
 
   return (
-    <aside class="flex min-h-0 flex-col gap-3 overflow-y-auto rounded-(--radius-spider) border border-(--color-spider-border) bg-(--color-spider-surface) p-2 text-[11px] font-mono">
+    <aside class={`flex min-h-0 flex-col gap-3 overflow-y-auto rounded-(--radius-spider) border border-(--color-spider-border) bg-(--color-spider-surface) p-2 text-[11px] font-mono ${props.class ?? ""}`}>
       <section class="flex flex-col gap-2">
         <h2 class="text-(--color-spider-muted)">Devices</h2>
         <label class="flex flex-col gap-0.5">

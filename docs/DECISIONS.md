@@ -96,8 +96,8 @@ Wave 5 proof evidence: [experiments/wave5/README.md](../experiments/wave5/README
 - Mic: PW capture source (user-selected in host UI).
 - Playback reference: **monitor port** of user-selected **output sink** (Teams speaker).
 - Camera: v4l2 list + user-selected device.
-- Device enumeration over host WS; `set-capture-devices` → `capture.Reopen` without process restart.
-- Env vars seed bootstrap defaults only.
+- Device enumeration over host WS; partial `set-capture-devices` merges with current selection → `capture.Reopen` without process restart.
+- Env vars seed bootstrap defaults only; missing IDs are filled from the first listed device.
 
 **Rejected:** PortAudio/malgo as primary path; PulseAudio device-name monitor hacks; headless-only env configuration without UI pickers.
 
