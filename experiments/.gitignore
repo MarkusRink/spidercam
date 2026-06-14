@@ -1,0 +1,14 @@
+# build artifacts
+**/pw_list
+**/pw_read_test
+**/reopen_test
+**/enc_test
+**/*.o
+
+# experiment outputs
+**/output/*.png
+**/output/*.h264
+**/output/*.avcc
+
+# vendored dev headers from apt download (see p5.2 README)
+**/.pw-dev/

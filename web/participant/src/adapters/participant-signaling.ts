@@ -12,6 +12,8 @@ export interface WelcomePayload {
   view: ParticipantRoomView;
 }
 
+export type InboundSdpMessage = AnswerMsg | ICECandidateMsg;
+
 export interface ParticipantSignaling {
   connect(): Promise<WelcomePayload>;
   disconnect(): void;
@@ -20,6 +22,7 @@ export interface ParticipantSignaling {
   ): void;
   onView(handler: (view: ParticipantRoomView) => void): void;
   onClose(handler: (wasClean: boolean) => void): void;
+  onInboundSdp(handler: (msg: InboundSdpMessage) => void): () => void;
   sendJoin(
     name: string,
     hasVideo: boolean,

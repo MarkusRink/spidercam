@@ -1,0 +1,3 @@
+pw_read_test
+*.o
+.pw-dev/

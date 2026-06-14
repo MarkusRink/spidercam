@@ -4,6 +4,8 @@
 
 Two **separate HTTP listeners** on two ports — no shared broadcast fan-out. Each listener: static SPA at `/`, API at `/api/v1/`.
 
+**WebRTC (D21):** Participant browser sends **offer** after `join`; Pion hub **answers**. Relay ICE both ways on `:1234` WS.
+
 **Full route reference:** [API.md](../API.md).
 
 ## Participant API — `:1234/api/v1`

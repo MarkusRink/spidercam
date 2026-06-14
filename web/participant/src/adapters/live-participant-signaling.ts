@@ -3,6 +3,7 @@ import type {
   ParticipantRoomView,
 } from "@spidercam/protocol";
 import type {
+  InboundSdpMessage,
   ParticipantSignaling,
   SdpRelayMessage,
   WelcomePayload,
@@ -17,6 +18,7 @@ export class LiveParticipantSignaling implements ParticipantSignaling {
   private welcomeHandler: WelcomeHandler | null = null;
   private viewHandler: ViewHandler | null = null;
   private closeHandler: CloseHandler | null = null;
+  private inboundSdpHandlers = new Set<(msg: InboundSdpMessage) => void>();
 
   connect(): Promise<WelcomePayload> {
     if (this.ws?.readyState === WebSocket.OPEN) {
@@ -67,6 +69,13 @@ export class LiveParticipantSignaling implements ParticipantSignaling {
 
         if (msg.type === "participant-view") {
           this.viewHandler?.(msg.view);
+          return;
+        }
+
+        if (msg.type === "answer" || msg.type === "ice-candidate") {
+          for (const handler of this.inboundSdpHandlers) {
+            handler(msg);
+          }
         }
       };
     });
@@ -92,6 +101,11 @@ export class LiveParticipantSignaling implements ParticipantSignaling {
 
   onClose(handler: CloseHandler): void {
     this.closeHandler = handler;
+  }
+
+  onInboundSdp(handler: (msg: InboundSdpMessage) => void): () => void {
+    this.inboundSdpHandlers.add(handler);
+    return () => this.inboundSdpHandlers.delete(handler);
   }
 
   sendJoin(

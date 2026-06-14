@@ -3,8 +3,10 @@ import type { WebSocket } from "ws";
 import type { ParticipantInboundMessage } from "@spidercam/protocol";
 import type { RoomModel } from "./room-model.js";
 import { sendJson } from "./http-util.js";
+import { MockWebRTCHub } from "./webrtc-mock.js";
 
 const VIEW_THROTTLE_MS = 100;
+const webrtcHub = new MockWebRTCHub();
 
 export class ParticipantHub {
   private clients = new Map<WebSocket, string>();
@@ -20,6 +22,7 @@ export class ParticipantHub {
     });
     ws.on("close", () => {
       this.clients.delete(ws);
+      webrtcHub.remove(clientId);
     });
   }
 
@@ -76,11 +79,28 @@ export class ParticipantHub {
       }
       case "leave":
         room.leave(clientId);
+        webrtcHub.remove(clientId);
         this.scheduleBroadcast(room);
         break;
       case "offer":
+        await webrtcHub
+          .getOrCreate(
+            clientId,
+            (socket, message) => this.send(socket, message),
+            ws,
+          )
+          .handleOffer(msg.sdp);
+        break;
       case "answer":
+        break;
       case "ice-candidate":
+        await webrtcHub
+          .getOrCreate(
+            clientId,
+            (socket, message) => this.send(socket, message),
+            ws,
+          )
+          .handleIce(msg.candidate);
         break;
     }
   }

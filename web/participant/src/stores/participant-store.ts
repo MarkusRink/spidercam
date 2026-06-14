@@ -1,9 +1,9 @@
 import { createStore } from "solid-js/store";
 import type { ParticipantRoomView } from "@spidercam/protocol";
 import type {
-  FakeParticipantPeer,
+  ParticipantPeer,
   PeerConnectionState,
-} from "../adapters/fake-peer.js";
+} from "../adapters/participant-peer.js";
 import type { ParticipantSignaling } from "../adapters/participant-signaling.js";
 
 const DISPLAY_NAME_KEY = "spidercam.displayName";
@@ -74,7 +74,7 @@ function reconnectBackoffMs(attempt: number): number {
 
 export function createParticipantStore(deps: {
   signaling: ParticipantSignaling;
-  peer: FakeParticipantPeer;
+  peer: ParticipantPeer;
 }) {
   const { signaling, peer } = deps;
 

@@ -12,6 +12,7 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "@roamhq/wrtc": "0.10.0",
     "@spidercam/protocol": "*",
     "@spidercam/test-fixtures": "*",
     "ws": "^8.18.2"

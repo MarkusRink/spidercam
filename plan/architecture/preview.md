@@ -131,8 +131,9 @@ type Encoder interface {
 	Close() error
 }
 
-// Production: enc_x264.go + enc_x264.c (libx264 cgo)
+// Production: enc_x264.go + native/enc_x264.c — promote from experiments/wave5/p5.7-x264/enc_test.c
 // CI/mock:    enc_mock.go — replays testdata/preview/keyframe.h264
+// Framing:    pack.go — IMPLEMENTED (P5.8) — PackChunk, AnnexBToAVCC
 ```
 
 Encoder settings (libx264):
@@ -147,6 +148,8 @@ Encoder settings (libx264):
 | Forced IDR | on `activeVideoId` change |
 
 ## Binary chunk format (WebSocket)
+
+Implemented in [`internal/preview/pack.go`](../../internal/preview/pack.go) — ported from `apps/mock-server/src/preview-stream.ts` (P5.8).
 
 Each **binary** WS frame on `/api/v1/ws/preview`:
 

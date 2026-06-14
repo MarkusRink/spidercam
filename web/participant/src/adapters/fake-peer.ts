@@ -1,16 +1,13 @@
-export type PeerConnectionState =
-  | "new"
-  | "connecting"
-  | "connected"
-  | "disconnected"
-  | "failed"
-  | "closed";
+import type {
+  ParticipantPeer,
+  PeerConnectionState,
+} from "./participant-peer.js";
 
-type ConnectionStateHandler = (state: PeerConnectionState) => void;
+export type { PeerConnectionState } from "./participant-peer.js";
 
-export class FakeParticipantPeer {
+export class FakeParticipantPeer implements ParticipantPeer {
   private state: PeerConnectionState = "new";
-  private stateHandler: ConnectionStateHandler | null = null;
+  private stateHandler: ((state: PeerConnectionState) => void) | null = null;
 
   async start(stream: MediaStream): Promise<void> {
     void stream;
@@ -30,7 +27,7 @@ export class FakeParticipantPeer {
     this.setState("closed");
   }
 
-  onConnectionStateChange(handler: ConnectionStateHandler): void {
+  onConnectionStateChange(handler: (state: PeerConnectionState) => void): void {
     this.stateHandler = handler;
   }
 

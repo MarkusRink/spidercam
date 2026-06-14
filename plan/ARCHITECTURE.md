@@ -51,22 +51,23 @@ flowchart TB
 ## Repository layout
 
 | Path                       | Responsibility                                 |
-| -------------------------- | ---------------------------------------------- | -------------------------------------------------------- |
-| `cmd/spidercamd/`          | CLI entry, flags, embed static UI              | [architecture/daemon.md](./architecture/daemon.md)       |
+| -------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cmd/spidercamd/`          | CLI entry, flags, embed static UI              | [architecture/daemon.md](./architecture/daemon.md)                                                                                                       |
 | `internal/cli/`            | Flag parsing, exit codes, browser launch       |
-| `internal/daemon/`         | Lifecycle, dual listeners, config              | [architecture/daemon.md](./architecture/daemon.md)       |
-| `internal/capture/`        | Host mic, webcam, speaker monitor              | [architecture/capture.md](./architecture/capture.md)     |
+| `internal/daemon/`         | Lifecycle, dual listeners, config              | [architecture/daemon.md](./architecture/daemon.md)                                                                                                       |
+| `internal/capture/`        | Host mic, webcam, speaker monitor              | [architecture/capture.md](./architecture/capture.md) — promote [p5.2](../../experiments/wave5/p5.2-pw-capture/)                                          |
 | `internal/capture/native/` | PipeWire C shim (cgo)                          |
-| `internal/webrtc/`         | Pion peer connections, RTP → PCM               | [architecture/webrtc.md](./architecture/webrtc.md)       |
-| `internal/signaling/`      | Participant WS `:1234`, host WS `:1235`        | [architecture/signaling.md](./architecture/signaling.md) |
-| `internal/room/`           | Room state, roles                              | [domain/types.md](./domain/types.md)                     |
-| `internal/audio/`          | Engine, processor, reference correction, mixer | [audio/overview.md](./audio/overview.md)                 |
-| `internal/selector/`       | Hysteresis + crossfade                         | [audio/selector.md](./audio/selector.md)                 |
-| `internal/output/`         | v4l2loopback + PulseAudio virtual mic          | [architecture/output.md](./architecture/output.md)       |
-| `internal/preview/`        | H.264 preview encoder + stream                 | [architecture/preview.md](./architecture/preview.md)     |
-| `web/participant/`         | Solid participant SPA                          | [ui/participant-monitor.md](./ui/participant-monitor.md) |
-| `web/host/`                | Solid host console SPA                         | [ui/host-console.md](./ui/host-console.md)               |
-| `web/ui-theme/`            | Shared Tailwind `@theme`                       | [ui/design-system.md](./ui/design-system.md)             |
+| `internal/webrtc/`         | Pion peer connections, RTP → PCM (D21)         | [architecture/webrtc.md](./architecture/webrtc.md)                                                                                                       |
+| `internal/signaling/`      | Participant WS `:1234`, host WS `:1235`        | [architecture/signaling.md](./architecture/signaling.md)                                                                                                 |
+| `internal/room/`           | Room state, roles                              | [domain/types.md](./domain/types.md)                                                                                                                     |
+| `internal/audio/`          | Engine, processor, reference correction, mixer | [audio/overview.md](./audio/overview.md)                                                                                                                 |
+| `internal/selector/`       | Hysteresis + crossfade                         | [audio/selector.md](./audio/selector.md)                                                                                                                 |
+| `internal/output/`         | v4l2loopback + PulseAudio virtual mic          | [architecture/output.md](./architecture/output.md) — promote [p5.5](../../experiments/wave5/p5.5-loopback/), [p5.6](../../experiments/wave5/p5.6-pulse/) |
+| `internal/preview/`        | H.264 preview encoder + stream                 | [architecture/preview.md](./architecture/preview.md) — `pack.go` done; enc [p5.7](../../experiments/wave5/p5.7-x264/)                                    |
+| `experiments/wave5/`       | Validated native I/O spikes (9/9 pass)         | [experiments/wave5/](../../experiments/wave5/)                                                                                                           |
+| `web/participant/`         | Solid participant SPA                          | [ui/participant-monitor.md](./ui/participant-monitor.md)                                                                                                 |
+| `web/host/`                | Solid host console SPA                         | [ui/host-console.md](./ui/host-console.md)                                                                                                               |
+| `web/ui-theme/`            | Shared Tailwind `@theme`                       | [ui/design-system.md](./ui/design-system.md)                                                                                                             |
 
 Protocol JSON shapes: [domain/types.md](./domain/types.md), [domain/messages.md](./domain/messages.md). REST + WS routes: [API.md](./API.md). TypeScript types for UIs generated or mirrored from JSON schema.
 
@@ -121,11 +122,15 @@ Teams AEC on the virtual mic does **not** fix pickup that happens on separate la
 ## Delivery sequence
 
 1. **CLI shell** — flags, banner, browser open, dual HTTP, room skeleton
-2. **Capture + output** — PipeWire C shim, v4l2 cam, virtual devices, device pickers
-3. **Pion + participant WS** — join, WebRTC, `participant-view`
-4. **Audio core** — dual-branch engine, reference analysis, AEC + RNNoise cgo, selector, mixer
-5. **Host WS + UI** — full state, settings, preview
-6. **Tests** — Go unit → Go API/WS E2E (`--mock`) → Playwright+MSW UI; single CI gate — [testing.md](./testing.md)
+2. **Signaling + mock engine** — WS/REST parity with `apps/mock-server`
+3. **Pion + mock capture/output** — WebRTC hub; mock PCM/video (D21: browser offers)
+4. **Audio core** — dual-branch engine, selector, mixer @ 10 ms
+5. **Native I/O** — promote [experiments/wave5/](../experiments/wave5/) → `internal/capture`, `output`, `preview` enc_x264 (**de-risked**, 9/9 proofs pass)
+6. **AEC + RNNoise** — cgo toggles; passthrough in `--mock`
+7. **Tests + CI** — Go unit → Go E2E → Playwright; see [testing.md](./testing.md)
+8. **Participant WebRTC** — replace `FakeParticipantPeer` in `web/participant`
+
+Detailed waves and pseudo-code: [BACKEND.md](./BACKEND.md).
 
 ## Resolved architecture choices
 

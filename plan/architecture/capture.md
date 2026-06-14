@@ -2,7 +2,9 @@
 
 **Target:** `internal/capture/`, `internal/capture/native/`
 
-Linux v1: **PipeWire via thin C shim** (D11). Go calls a stable C API; libpipewire graph linking stays in C.
+Linux v1: **PipeWire via thin C shim** (D11, D25). Go calls a stable C API; libpipewire graph linking stays in C.
+
+**Validated:** [experiments/wave5/p5.1-pw-list](../../experiments/wave5/p5.1-pw-list/) (enum), [p5.2-pw-capture](../../experiments/wave5/p5.2-pw-capture/) (mic + monitor rings), [p5.9-reopen](../../experiments/wave5/p5.9-reopen/) (Reopen 11.82 ms). Promote C sources into `internal/capture/native/` per [BACKEND.md](../BACKEND.md).
 
 ## Streams
 
@@ -102,21 +104,24 @@ int sp_capture_read_monitor(sp_capture *c, float *buf, int frames);
 
 C responsibilities:
 
-1. `pw_main_loop` + `pw_stream` for mic (capture source port).
-2. Second `pw_stream` linked to **monitor port** of selected sink (`PW_DIRECTION_INPUT`).
-3. Negotiate F32 @ 48 kHz mono (resample in C if needed).
-4. Push PCM into lock-free ring buffers; Go pull reads on engine tick.
-5. On `sink_id` / `mic_id` change: tear down and relink streams (`Reopen`).
+1. `pw_main_loop` on a **dedicated pthread** (D25); Go never blocks on PipeWire.
+2. `pw_stream` for mic (capture source port).
+3. Second `pw_stream` linked to **monitor port** of selected sink (`PW_DIRECTION_INPUT`).
+4. Negotiate F32 @ 48 kHz mono (resample in C if needed).
+5. Push PCM into **SPSC ring buffers** (480 samples × 8 frames); Go pulls on engine tick.
+6. During setup: **iterate** `pw_loop_iterate` while `pw_core_sync` pending — do not block before `pw_main_loop_run`.
+7. Teardown: `spa_hook_remove` on registry/core hooks (current PipeWire API).
+8. On `sink_id` / `mic_id` change: tear down and relink (`Reopen` < 500 ms — P5.9).
 
 Go responsibilities:
 
-- cgo wrapper, `ListDevices`, v4l2 camera enumeration (`/dev/video*`).
+- cgo wrapper, `ListDevices`, v4l2 camera via **`github.com/blackjack/webcam`** (D23, P5.4).
 - In-memory `Selection` for the session (D15); env vars for bootstrap defaults only.
 - No direct libpipewire calls from Go.
 
 ## Camera
 
-v1: **v4l2** in Go (`github.com/blackjack/webcam` or raw ioctl) — separate from PW audio shim. Listed in `Devices.Cameras` with path + card name.
+v1: **v4l2** via `github.com/blackjack/webcam` (D23) — separate from PW audio shim. List `/dev/video*` + sysfs card name; skip non-capture metadata nodes.
 
 ## Defaults
 

@@ -21,6 +21,16 @@
 | D18 | Per-stream AEC               | WebRTC APM AEC3; one instance per mic; `playback-ref` far-end; host toggle per card; default off.        | 2026-06-11 |
 | D19 | Per-stream denoise           | RNNoise via cgo; host toggle per card; `aecUs`/`denoiseUs` + `enhancementBudgetPct`; default off.        | 2026-06-11 |
 | D20 | Participant single screen    | One viewport; clientId UUID + cosmetic name; header routed dot; lost-host auto-reconnect.                | 2026-06-13 |
+| D21 | WebRTC SDP direction         | Browser offers after join; Pion hub answers. Star topology — hub receives participant media.             | 2026-06-14 |
+| D22 | PulseAudio virtual mic       | `github.com/jfreymuth/pulse` — float32 mono @ 48 kHz to named sink. Proof P5.6.                          | 2026-06-14 |
+| D23 | v4l2 camera library          | `github.com/blackjack/webcam` for host cam capture. Proof P5.4.                                          | 2026-06-14 |
+| D24 | v4l2loopback pixel format    | `VIDIOC_ENUM_FMT` + prefer YUYV/RGB24; `VIDIOC_G_FMT` fallback if `S_FMT` fails. Proof P5.5.             | 2026-06-14 |
+| D25 | PipeWire thread model        | Dedicated `pthread` + `pw_main_loop`; SPSC rings; iterate loop during sync. Proof P5.2–P5.3, P5.9.       | 2026-06-14 |
+| D26 | libx264 in CI                | Mock encoder in CI; `PackChunk` unit tests; real x264 on dev host only. Proof P5.7, P5.8.                | 2026-06-14 |
+| D27 | `!cgo` build fallback        | Stub packages for `!cgo \|\| !linux`; `go test` without PW/x264 dev headers.                             | 2026-06-14 |
+| D28 | Virtual device provisioning  | Check-only at startup; operator docs for modprobe + null sink; no auto-create in v1. Proof P5.5, P5.6.   | 2026-06-14 |
+| D29 | Go module path               | `github.com/markus/spidercam` — `go.mod` at repo root. Proof P5.8.                                       | 2026-06-14 |
+| D30 | Virtual cam device path      | Discover v4l2loopback via sysfs name; env `SPIDERCAM_VIDEO_DEVICE` overrides. Proof P5.5.                | 2026-06-14 |
 
 ## D1 — Host vs participant state channel
 
@@ -186,3 +196,93 @@ No CPU metric in host header.
 - `denoiseUs` per stream; `enhancementBudgetPct` in header.
 
 **Rejected:** Global `nsLevel` slider; DeepFilterNet in scope; cloud enhancement APIs.
+
+## D21 — WebRTC SDP negotiation direction
+
+**Chosen:** Participant browser creates the SDP offer after `join`; Pion hub answers.
+
+- Signaling on `:1234` WS: client `offer` → hub `answer`; ICE relay both ways.
+- Hub is receive-only for participant mic/cam (star topology); host A/V from native capture, not WebRTC.
+- Wave 8 participant adapter: `RTCPeerConnection.createOffer()` → apply hub answer.
+
+**Rejected:** Hub-initiated offer as primary path; dual-direction negotiation without a single owner.
+
+## D22 — PulseAudio virtual mic
+
+**Chosen:** `github.com/jfreymuth/pulse` for float32 mono playback to a named PulseAudio sink.
+
+- Teams selects `spidercam_sink` (null sink) as microphone input.
+- Proof [P5.6](../experiments/wave5/p5.6-pulse/): 440 Hz tone verified via `spidercam_sink.monitor`.
+
+**Rejected:** `github.com/jfreymuth/pulseaudio` (module does not exist); C shim; `pacat` subprocess per frame.
+
+## D23 — v4l2 camera library
+
+**Chosen:** `github.com/blackjack/webcam` for listing and opening host cameras.
+
+- Device list via `/dev/video*` + sysfs card name.
+- Proof [P5.4](../experiments/wave5/p5.4-v4l2-cam/): YUYV 640×480 → PNG from `/dev/video0`.
+
+**Rejected:** Raw ioctl-only for v1; `go4vl` (unnecessary until blackjack limits hit).
+
+## D24 — v4l2loopback pixel format
+
+**Chosen:** Enumerate output formats at open; prefer YUYV then RGB24; convert compositor RGBA before write.
+
+- If `VIDIOC_S_FMT` fails (e.g. requested 1280×720), fall back to `VIDIOC_G_FMT` defaults and write at negotiated size.
+- Proof [P5.5](../experiments/wave5/p5.5-loopback/): 300 frames written to loopback.
+
+**Rejected:** Fixed format without enumeration; assuming `S_FMT` always succeeds at 1280×720.
+
+## D25 — PipeWire thread model
+
+**Chosen:** Dedicated `pthread` runs `pw_main_loop`; Go engine tick pulls SPSC ring buffers (480 samples × 8 frames).
+
+- During setup: iterate `pw_loop` while `pw_core_sync` pending — do not block before `pw_main_loop_run`.
+- Teardown: `spa_hook_remove`, not deprecated `pw_registry_destroy` arity.
+- `capture.Reopen` tears down and relinks streams; proof [P5.9](../experiments/wave5/p5.9-reopen/) reopen **11.82 ms**.
+
+**Rejected:** PipeWire on Go main thread; blocking PW calls from 10 ms engine tick.
+
+## D26 — libx264 in CI
+
+**Chosen:** CI uses `--mock` preview encoder; unit tests cover `PackChunk` / `AnnexBToAVCC` only ([P5.8](../experiments/wave5/p5.8-preview-pack/)).
+
+- Production: libx264 cgo (`ultrafast`, `zerolatency`, baseline) on dev/operator host ([P5.7](../experiments/wave5/p5.7-x264/)).
+- Do not install `libx264-dev` in GitHub Actions for v1.
+
+**Rejected:** Full encode tests in CI; macOS/Windows x264 gates.
+
+## D27 — `!cgo` build fallback
+
+**Chosen:** `//go:build !cgo || !linux` stubs for capture, output, and preview encoder.
+
+- `go test ./internal/...` runs without `libpipewire-0.3-dev` or `libx264-dev`.
+- Linux production build: `CGO_ENABLED=1 go build ./cmd/spidercamd`.
+
+**Rejected:** cgo required for all `go test` targets.
+
+## D28 — Virtual device provisioning
+
+**Chosen:** Check-only at startup — clear log message and `outputHealthy: false` when virtual devices missing.
+
+- Operator docs: `modprobe v4l2loopback …` and `pactl load-module module-null-sink sink_name=spidercam_sink`.
+- No `spidercamd setup-devices` subcommand in v1.
+
+**Rejected:** Auto-create loopback/null sink from daemon; silent failure.
+
+## D29 — Go module path
+
+**Chosen:** `github.com/markus/spidercam` — root `go.mod`, `internal/*` packages.
+
+- Established by [P5.8](../experiments/wave5/p5.8-preview-pack/) preview framing tests.
+
+## D30 — Virtual cam device path
+
+**Chosen:** Resolve v4l2loopback device by sysfs name (`*loopback*`), not a fixed `/dev/video2`.
+
+- `video_nr=2` may not land on `/dev/video2` when that node is already taken (integrated camera metadata).
+- Env `SPIDERCAM_VIDEO_DEVICE` overrides auto-discovery when set.
+- Proof [P5.5](../experiments/wave5/p5.5-loopback/): loopback at `/dev/video4`, `card_label=spidercam-loopback`.
+
+**Rejected:** Hardcoded `/dev/video2` as the only production path.

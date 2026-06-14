@@ -4,14 +4,16 @@ Target-state specification for the Go daemon iteration.
 
 ## High level
 
-| Document                             | Purpose                                       |
-| ------------------------------------ | --------------------------------------------- |
-| [USE_CASE.md](./USE_CASE.md)         | Actors, goals, success criteria, user actions |
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | Go daemon topology, ports, data flow          |
-| [API.md](./API.md)                   | REST + WebSocket routes (both ports)          |
-| [UI.md](./UI.md)                     | Host + participant screens, update loops      |
-| [DECISIONS.md](./DECISIONS.md)       | Open items before implementation              |
-| [GLOSSAR.md](./GLOSSAR.md)           | Term definitions                              |
+| Document                                             | Purpose                                                    |
+| ---------------------------------------------------- | ---------------------------------------------------------- |
+| [USE_CASE.md](./USE_CASE.md)                         | Actors, goals, success criteria, user actions              |
+| [ARCHITECTURE.md](./ARCHITECTURE.md)                 | Go daemon topology, ports, data flow                       |
+| [API.md](./API.md)                                   | REST + WebSocket routes (both ports)                       |
+| [UI.md](./UI.md)                                     | Host + participant screens, update loops                   |
+| [DECISIONS.md](./DECISIONS.md)                       | Resolved decisions index (D21–D30 from Wave 5 experiments) |
+| [BACKEND.md](./BACKEND.md)                           | Backend waves, pseudo-code, subagent prompts               |
+| [../experiments/README.md](../experiments/README.md) | Wave 5 proof results (P5.1–P5.9)                           |
+| [GLOSSAR.md](./GLOSSAR.md)                           | Term definitions                                           |
 
 ## Architecture drill-down
 
@@ -63,6 +65,7 @@ Target-state specification for the Go daemon iteration.
 ## Reading order
 
 1. USE_CASE → ARCHITECTURE → UI
-2. Resolve [DECISIONS.md](./DECISIONS.md)
-3. Domain + audio (Go interfaces are canonical)
-4. Implement per [ARCHITECTURE.md](./ARCHITECTURE.md) delivery sequence
+2. [DECISIONS.md](./DECISIONS.md) + [experiments/](../experiments/) (Wave 5 validated)
+3. [BACKEND.md](./BACKEND.md) — implementation waves
+4. Domain + audio (Go interfaces are canonical)
+5. Implement per delivery sequence in [ARCHITECTURE.md](./ARCHITECTURE.md)

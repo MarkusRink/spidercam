@@ -5,3 +5,7 @@ dist/
 test-results/
 playwright-report/
 blob-report/
+
+# Synced from web/*/dist by make build (embedded into spidercamd)
+internal/daemon/ui/host/assets/
+internal/daemon/ui/participant/assets/

@@ -56,18 +56,32 @@ func (h *Hub) createPeer(clientID string) (*Peer, error) {
 - Use Pion `TrackRemote` + `oggreader` / built-in sample builder
 - Target: float32 mono 48 kHz, 480-sample frames into `internal/audio/jitter`
 
+## SDP negotiation (D21)
+
+**Browser offers, hub answers.** Participant `:1234` WS after `join`:
+
+1. Browser `createOffer()` → `offer` message
+2. Hub `SetRemoteDescription(offer)` → `createAnswer()` → `answer` message
+3. ICE candidates relayed both ways
+
+Wave 8 replaces [web/participant/src/adapters/fake-peer.ts](../../web/participant/src/adapters/fake-peer.ts).
+
 ## Browser side (participant only)
 
 ```ts
-// web/participant/src/webrtc.ts
+// web/participant/src/adapters/live-peer.ts (target)
 export class ParticipantPeer {
-  constructor(private signaling: ParticipantSignaling) {}
-
   async start(localStream: MediaStream): Promise<void> {
     this.pc = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
-    // add tracks, create offer, exchange via :1234/api/v1/ws
+    for (const track of localStream.getTracks()) {
+      this.pc.addTrack(track, localStream);
+    }
+    const offer = await this.pc.createOffer();
+    await this.pc.setLocalDescription(offer);
+    await this.signaling.send({ type: "offer", sdp: offer.sdp! });
+    // on answer + ice-candidate from WS
   }
 }
 ```

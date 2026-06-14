@@ -1,0 +1,182 @@
+package daemon
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"log"
+	"net/http"
+	"time"
+
+	"github.com/markus/spidercam/internal/audio"
+	"github.com/markus/spidercam/internal/fixtures"
+	"github.com/markus/spidercam/internal/output"
+	"github.com/markus/spidercam/internal/preview"
+	"github.com/markus/spidercam/internal/protocol"
+	"github.com/markus/spidercam/internal/room"
+	"github.com/markus/spidercam/internal/scenario"
+	"github.com/markus/spidercam/internal/signaling"
+	"github.com/markus/spidercam/internal/webrtc"
+	"golang.org/x/sync/errgroup"
+)
+
+func Run(ctx context.Context, cfg Config) error {
+	printBanner(cfg)
+
+	rm := room.New(cfg.ParticipantURL)
+	if state, err := fixtures.LoadRoutingState(); err == nil {
+		rm.SetState(state)
+	}
+
+	engine := scenario.New(rm)
+	webrtcHub := webrtc.NewHub(rm)
+	hostHub := signaling.NewHostHub(rm)
+	participantHub := signaling.NewParticipantHub(rm, webrtcHub)
+
+	keyframe, err := fixtures.LoadPreviewKeyframe()
+	if err != nil {
+		return fmt.Errorf("preview fixture: %w", err)
+	}
+	previewStream, err := preview.New(preview.Config{
+		Width:        preview.DefaultWidth,
+		Height:       preview.DefaultHeight,
+		FPS:          preview.DefaultFPS,
+		BitrateKbps:  preview.DefaultBitrateKbps,
+		Mock:         cfg.Mock,
+		MockKeyframe: keyframe,
+	})
+	if err != nil {
+		return fmt.Errorf("preview stream: %w", err)
+	}
+	defer previewStream.Close()
+	previewHub := signaling.NewPreviewHub(previewStream)
+
+	engine.OnState(hostHub.BroadcastState)
+	engine.OnSelectionChange(participantHub.ScheduleBroadcast)
+
+	var audioEngine *audio.Engine
+	var outWriter output.Writer
+	if cfg.Mock {
+		engine.SetAudioDriven(true)
+		audioEngine, _, outWriter = audio.SetupMockAudio(ctx, rm, engine)
+		hostHub.SetStreamProcessor(audioEngine)
+	} else {
+		outCfg := output.DefaultConfig()
+		type openResult struct {
+			out output.Writer
+			err error
+		}
+		openCh := make(chan openResult, 1)
+		go func() {
+			out, err := output.Open(ctx, outCfg)
+			openCh <- openResult{out: out, err: err}
+		}()
+		var out output.Writer
+		var err error
+		select {
+		case res := <-openCh:
+			out, err = res.out, res.err
+		case <-time.After(3 * time.Second):
+			err = errors.New("timed out opening virtual output (v4l2loopback/pulseaudio)")
+		}
+		if err != nil {
+			log.Printf("virtual output unavailable: %v", err)
+			fallback := output.NewMockWriter()
+			fallback.SetHealthy(false)
+			outWriter = fallback
+		} else {
+			outWriter = out
+			defer func() { _ = out.Close() }()
+		}
+		rm.UpdateState(func(s *protocol.RoomState) {
+			s.OutputHealthy = outWriter.Healthy()
+		})
+	}
+	_ = outWriter
+
+	if cfg.Mock {
+		log.Print("mock mode enabled (capture/output stubbed)")
+	}
+
+	engine.Start(ctx)
+	go previewHub.PublishLoop(ctx)
+	preview.RunMockCompositor(ctx, previewStream, rm, func(cut bool, sel *protocol.SelectionState) {
+		if !cut || sel == nil {
+			return
+		}
+		previewHub.BroadcastCut(protocol.PreviewCutMsg{
+			Type:          "preview-cut",
+			ActiveVideoID: sel.ActiveVideoID,
+			Seq:           int(previewStream.Seq()),
+		})
+	})
+
+	hostSrv := &http.Server{
+		Addr: cfg.HostHTTPAddr,
+		Handler: signaling.NewHostMux(hostFS, hostUIRoot, rm, signaling.HostServices{
+			Hub:             hostHub,
+			PreviewHub:      previewHub,
+			StreamProcessor: audioEngine,
+		}),
+	}
+	participantSrv := &http.Server{
+		Addr: cfg.ParticipantHTTPAddr,
+		Handler: signaling.NewParticipantMux(participantFS, participantUIRoot, signaling.ParticipantServices{
+			Hub: participantHub,
+		}),
+	}
+
+	g, ctx := errgroup.WithContext(ctx)
+
+	g.Go(func() error {
+		log.Printf("host UI listening on %s", cfg.HostHTTPAddr)
+		err := hostSrv.ListenAndServe()
+		if errors.Is(err, http.ErrServerClosed) {
+			return nil
+		}
+		return fmt.Errorf("host server: %w", err)
+	})
+
+	g.Go(func() error {
+		log.Printf("participant UI listening on %s", cfg.ParticipantHTTPAddr)
+		err := participantSrv.ListenAndServe()
+		if errors.Is(err, http.ErrServerClosed) {
+			return nil
+		}
+		return fmt.Errorf("participant server: %w", err)
+	})
+
+	g.Go(func() error {
+		<-ctx.Done()
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		var errs []error
+		if err := hostSrv.Shutdown(shutdownCtx); err != nil {
+			errs = append(errs, err)
+		}
+		if err := participantSrv.Shutdown(shutdownCtx); err != nil {
+			errs = append(errs, err)
+		}
+		return errors.Join(errs...)
+	})
+
+	printReady(cfg)
+
+	if cfg.OpenBrowser {
+		go openBrowser(hostURL(cfg.HostHTTPAddr))
+	}
+
+	return g.Wait()
+}
+
+func printBanner(cfg Config) {
+	fmt.Printf("spidercamd %s\n", Version)
+}
+
+func printReady(cfg Config) {
+	fmt.Printf("  host UI:        %s\n", hostURL(cfg.HostHTTPAddr))
+	fmt.Printf("  participant UI: %s\n", cfg.ParticipantURL)
+	if cfg.Mock {
+		fmt.Printf("  mode:           mock\n")
+	}
+}

@@ -40,18 +40,20 @@ Go and TypeScript must not drift — fixtures are the contract.
 
 ## 1. Go unit tests
 
-| Package                    | Cases                                                                         |
-| -------------------------- | ----------------------------------------------------------------------------- |
-| `internal/audio/math`      | rmsDbfs, normLevel, frameScore, equalPowerGains, correlation, GCC-PHAT        |
-| `internal/selector`        | silence, margin+hold, emergency, ref excluded, no host-VAD override           |
-| `internal/audio/reference` | ref VAD, echoPenalty on raw, delay tracker, global max                        |
-| `internal/audio/processor` | dual branch: raw scores vs post-enhancement meters; VAD hangover; calibration |
-| `internal/audio/aec`       | passthrough mock; ERLE tolerance on synthetic FIR (optional golden)           |
-| `internal/audio/enhance`   | passthrough; float↔int16 clip; denoiseUs EMA                                  |
-| `internal/protocol`        | message decode, participant vs host types, golden JSON round-trip             |
-| `internal/preview`         | chunk framing, subsample 30→15 fps, ForceKeyframe on id change                |
+| Package                    | Cases                                                                           |
+| -------------------------- | ------------------------------------------------------------------------------- |
+| `internal/audio/math`      | rmsDbfs, normLevel, frameScore, equalPowerGains, correlation, GCC-PHAT          |
+| `internal/selector`        | silence, margin+hold, emergency, ref excluded, no host-VAD override             |
+| `internal/audio/reference` | ref VAD, echoPenalty on raw, delay tracker, global max                          |
+| `internal/audio/processor` | dual branch: raw scores vs post-enhancement meters; VAD hangover; calibration   |
+| `internal/audio/aec`       | passthrough mock; ERLE tolerance on synthetic FIR (optional golden)             |
+| `internal/audio/enhance`   | passthrough; float↔int16 clip; denoiseUs EMA                                    |
+| `internal/protocol`        | message decode, participant vs host types, golden JSON round-trip               |
+| `internal/preview`         | **pack.go done** — `PackChunk`, `AnnexBToAVCC`; subsample + `ForceKeyframe` TBD |
 
 Run: `go test ./internal/... -race -count=1`
+
+**Exists today:** `go test ./internal/preview/...` (P5.8 framing). **Experiments:** Wave 5 native spikes in [experiments/wave5/](../../experiments/wave5/) — not run in CI.
 
 Synthetic PCM from `testdata/pcm/` — no PipeWire, no browser.
 

@@ -12,7 +12,7 @@ spidercamd 0.1.0
   host UI:        http://127.0.0.1:1235/
   participant UI: http://192.168.1.42:1234/
   virtual mic:    spidercam_sink
-  virtual cam:    /dev/video2
+  virtual cam:    /dev/video4 (spidercam-loopback; auto-detected — D30)
   capture:        mic=Built-in · speaker=HDMI-A · cam=/dev/video0
   → opened host UI in browser (disable with --no-open-browser)
 ```
