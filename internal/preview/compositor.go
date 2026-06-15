@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/markus/spidercam/internal/output"
 	"github.com/markus/spidercam/internal/protocol"
 	"github.com/markus/spidercam/internal/room"
 )
@@ -15,10 +16,10 @@ type CameraReader interface {
 }
 
 func RunMockCompositor(ctx context.Context, stream *Stream, rm *room.Room, onCut func(cut bool, sel *protocol.SelectionState)) {
-	RunCompositor(ctx, stream, rm, nil, onCut)
+	RunCompositor(ctx, stream, rm, nil, nil, onCut)
 }
 
-func RunCompositor(ctx context.Context, stream *Stream, rm *room.Room, camera CameraReader, onCut func(cut bool, sel *protocol.SelectionState)) {
+func RunCompositor(ctx context.Context, stream *Stream, rm *room.Room, camera CameraReader, videoOut output.Writer, onCut func(cut bool, sel *protocol.SelectionState)) {
 	width := stream.cfg.Width
 	height := stream.cfg.Height
 	rgba := make([]byte, width*height*4)
@@ -52,6 +53,9 @@ func RunCompositor(ctx context.Context, stream *Stream, rm *room.Room, camera Ca
 					}
 				}
 				cut := stream.OnFrame(frame, sel)
+				if videoOut != nil && videoOut.Healthy() {
+					_ = videoOut.WriteVideo(frame.RGBA, width, height)
+				}
 				if onCut != nil {
 					onCut(cut, sel)
 				}

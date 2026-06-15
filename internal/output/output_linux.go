@@ -52,6 +52,16 @@ func openPlatform(ctx context.Context, cfg Config) (Writer, error) {
 		return nil, missingVideoDeviceErr(fmt.Sprintf("video %s", vidPath), err)
 	}
 
+	if err := primeV4L2Output(video, cfg.Width, cfg.Height); err != nil {
+		_ = video.Close()
+		return nil, missingVideoDeviceErr(fmt.Sprintf("prime video %s", vidPath), err)
+	}
+
+	if err := refreshCameraSourceSync(); err != nil {
+		_ = video.Close()
+		return nil, fmt.Errorf("refresh pipewire camera source: %w", err)
+	}
+
 	audio, err := openPulseSink(cfg.AudioSink)
 	if err != nil {
 		_ = video.Close()

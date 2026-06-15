@@ -175,6 +175,37 @@ func pickFormat(formats []uint32) (uint32, error) {
 }
 
 func setFormat(fd int, pixelformat uint32, width, height int) (v4l2PixFormat, error) {
+	trySizes := [][2]int{{width, height}, {640, 480}, {1280, 720}}
+	seen := make(map[[2]int]bool)
+	var sizes [][2]int
+	for _, s := range trySizes {
+		if s[0] <= 0 || s[1] <= 0 || seen[s] {
+			continue
+		}
+		seen[s] = true
+		sizes = append(sizes, s)
+	}
+
+	var lastErr error
+	for _, size := range sizes {
+		pix, err := trySetFormat(fd, pixelformat, size[0], size[1])
+		if err != nil {
+			lastErr = err
+			continue
+		}
+		if pix.Width == 0 || pix.Height == 0 || pix.Sizeimage == 0 {
+			lastErr = fmt.Errorf("invalid format %dx%d sizeimage=%d", pix.Width, pix.Height, pix.Sizeimage)
+			continue
+		}
+		return pix, nil
+	}
+	if lastErr == nil {
+		lastErr = errors.New("no usable output format")
+	}
+	return v4l2PixFormat{}, lastErr
+}
+
+func trySetFormat(fd int, pixelformat uint32, width, height int) (v4l2PixFormat, error) {
 	fmtStruct := v4l2Format{Type: v4l2BufTypeVideoOutput}
 	if err := ioctlPtr(fd, vidIOCGFmt, unsafe.Pointer(&fmtStruct)); err != nil {
 		return v4l2PixFormat{}, fmt.Errorf("VIDIOC_G_FMT: %w", err)
@@ -186,10 +217,7 @@ func setFormat(fd int, pixelformat uint32, width, height int) (v4l2PixFormat, er
 	fmtStruct.Pix.Height = uint32(height)
 	fmtStruct.Pix.Field = v4l2FieldNone
 	if err := ioctlPtr(fd, vidIOCSFmt, unsafe.Pointer(&fmtStruct)); err != nil {
-		fmtStruct = v4l2Format{Type: v4l2BufTypeVideoOutput}
-		if err2 := ioctlPtr(fd, vidIOCGFmt, unsafe.Pointer(&fmtStruct)); err2 != nil {
-			return v4l2PixFormat{}, fmt.Errorf("VIDIOC_G_FMT: %w", err2)
-		}
+		return v4l2PixFormat{}, fmt.Errorf("VIDIOC_S_FMT %dx%d: %w", width, height, err)
 	}
 	return fmtStruct.Pix, nil
 }

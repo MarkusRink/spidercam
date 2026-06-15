@@ -103,7 +103,6 @@ func Run(ctx context.Context, cfg Config) error {
 			s.OutputHealthy = outWriter.Healthy()
 		})
 	}
-	_ = outWriter
 
 	var captureReopener signaling.CaptureReopener
 	var previewCamera preview.CameraReader
@@ -147,7 +146,7 @@ func Run(ctx context.Context, cfg Config) error {
 	if cfg.Mock {
 		preview.RunMockCompositor(ctx, previewStream, rm, onPreviewCut)
 	} else {
-		preview.RunCompositor(ctx, previewStream, rm, previewCamera, onPreviewCut)
+		preview.RunCompositor(ctx, previewStream, rm, previewCamera, outWriter, onPreviewCut)
 	}
 
 	hostSrv := &http.Server{

@@ -11,7 +11,7 @@ const (
 	DefaultHeight    = 720
 
 	LoopbackModprobeModule = "v4l2loopback"
-	LoopbackSetup          = `sudo modprobe v4l2loopback video_nr=2 card_label="spidercam-loopback" exclusive_caps=1`
+	LoopbackSetup          = `sudo modprobe v4l2loopback video_nr=2 card_label="spidercam-loopback" exclusive_caps=1 max_width=1280 max_height=720`
 	SetupSubcommand        = "spidercamd setup"
 )
 
@@ -19,6 +19,8 @@ var LoopbackModprobeOptions = []string{
 	"video_nr=2",
 	"card_label=spidercam-loopback",
 	"exclusive_caps=1",
+	"max_width=1280",
+	"max_height=720",
 }
 
 func NullSinkModuleArgs(sinkName string) string {

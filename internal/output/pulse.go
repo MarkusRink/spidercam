@@ -46,13 +46,10 @@ func (q *sampleQueue) push(samples []float32) {
 func (q *sampleQueue) read(out []float32) (int, error) {
 	q.mu.Lock()
 	defer q.mu.Unlock()
-	for len(q.buf) < len(out) && !q.closed {
-		q.wait.Wait()
+	if q.closed && len(q.buf) == 0 {
+		return 0, pulse.EndOfData
 	}
 	if len(q.buf) == 0 {
-		if q.closed {
-			return 0, pulse.EndOfData
-		}
 		for i := range out {
 			out[i] = 0
 		}
