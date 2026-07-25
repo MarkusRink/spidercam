@@ -10,3 +10,6 @@ blob-report/
 internal/daemon/ui/host/assets/
 internal/daemon/ui/participant/assets/
 bin/
+
+__pycache__/
+*.pyc
